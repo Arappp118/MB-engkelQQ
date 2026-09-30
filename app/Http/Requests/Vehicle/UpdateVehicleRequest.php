@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Http\Vehicle;
+namespace App\Http\Requests\Vehicle;
 
-//use Illuminate\Foundation\Http\FormRequest;
-use App\Http\Requests\Vehicle\StoreVehicleRequest;
-use App\Http\Requests\Vehicle\UpdateVehicleRequest;
+use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateVehicleRequest extends FormRequest
 {

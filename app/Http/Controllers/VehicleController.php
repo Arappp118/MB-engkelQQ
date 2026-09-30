@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreVehicleRequest;
-use App\Http\Requests\UpdateVehicleRequest;
+use App\Http\Requests\Vehicle\StoreVehicleRequest;
+use App\Http\Requests\Vehicle\UpdateVehicleRequest;
 use App\Models\Vehicle;
 use App\Services\VehicleService;
 use Illuminate\Http\RedirectResponse;
