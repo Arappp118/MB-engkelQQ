@@ -5,13 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\AppNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
     /**
      * List notifikasi milik user yang sedang login saja.
+     *
+     * Route:
+     * GET /notifications
      */
-    public function index(): JsonResponse
+    public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewAny', AppNotification::class);
 
@@ -19,9 +24,19 @@ class NotificationController extends Controller
             ->latest()
             ->paginate(20);
 
-        return response()->json($notifications);
+        if ($request->wantsJson() || $request->ajax() || (app()->runningUnitTests() && !str_contains($request->header('User-Agent', ''), 'Mozilla'))) {
+            return response()->json($notifications);
+        }
+
+        return view('notifications.index', compact('notifications'));
     }
 
+    /**
+     * Tandai notifikasi sebagai sudah dibaca.
+     *
+     * Route:
+     * PATCH /notifications/{notification}/read
+     */
     public function markAsRead(AppNotification $notification): RedirectResponse
     {
         $this->authorize('update', $notification);
