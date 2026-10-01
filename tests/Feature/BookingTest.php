@@ -177,4 +177,34 @@ class BookingTest extends TestCase
             'action' => 'booking.created',
         ]);
     }
+
+    public function test_admin_dapat_mengubah_status_kendaraan_tiba(): void
+    {
+        [$customer, $vehicle] = $this->makeCustomerWithVehicle();
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        
+        // Buat mekanik agar assignment sukses
+        User::factory()->create(['role' => 'mechanic', 'is_active' => true]);
+
+        $booking = Booking::create([
+            'nomor_booking' => Booking::generateNomorBooking(),
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'tanggal' => now()->addDay(),
+            'waktu' => '10:00',
+            'keluhan' => 'Test',
+            'jenis_layanan' => 'perbaikan',
+            'status' => 'vehicle_picked_up',
+        ]);
+
+        $response = $this->actingAs($admin)->patch("/bookings/{$booking->id}/arrive");
+
+        $response->assertRedirect("/bookings/{$booking->id}");
+        $response->assertSessionHas('success', 'Kendaraan berhasil tiba di bengkel.');
+
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->id,
+            'status' => 'assigned',
+        ]);
+    }
 }

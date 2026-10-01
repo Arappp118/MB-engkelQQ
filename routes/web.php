@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('bookings', BookingController::class)->only(['index', 'create', 'store', 'show']);
     Route::patch('bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
     Route::patch('bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
+    Route::patch('bookings/{booking}/arrive', [BookingController::class, 'arrive'])->name('bookings.arrive');
 
     Route::resource('service-orders', ServiceOrderController::class)->only(['index', 'show']);
     Route::patch('service-orders/{service_order}/start', [ServiceOrderController::class, 'start'])->name('service-orders.start');
