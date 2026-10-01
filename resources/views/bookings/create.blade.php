@@ -133,12 +133,12 @@
                         <fieldset class="p-4 rounded-xl bg-mc-sidebar border border-mc-border space-y-4">
                             <legend class="px-2 text-sm font-semibold text-mc-text -ml-2">Layanan Antar-Jemput</legend>
                             <div class="flex items-center gap-3">
-                                <input type="checkbox" id="pickup_requested" name="pickup_requested" value="true"
-                                    @checked(old('pickup_requested') == 'true')
+                                <input type="checkbox" id="pickup_requested" name="pickup_requested" value="1"
+                                    @checked(old('pickup_requested') == '1')
                                     class="w-4 h-4 rounded border-mc-border bg-mc-bg text-mc-orange focus:ring-mc-orange focus:ring-offset-mc-bg" />
                                 <label for="pickup_requested" class="text-sm text-mc-text">Minta kendaraan dijemput</label>
                             </div>
-                            <div id="pickup_address_section" class="{{ old('pickup_requested') == 'true' ? '' : 'hidden' }} space-y-4">
+                            <div id="pickup_address_section" class="{{ old('pickup_requested') == '1' ? '' : 'hidden' }} space-y-4">
                                 <div>
                                     <label for="alamat_pickup" class="mc-label">Alamat Penjemputan <span class="text-red-400">*</span></label>
                                     <textarea id="alamat_pickup" name="alamat_pickup" rows="2"
