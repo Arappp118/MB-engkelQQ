@@ -69,7 +69,8 @@ class DeliveryTaskTest extends TestCase
         $response = $this->actingAs($admin)->get('/delivery-settings');
 
         $response->assertOk();
-        $response->assertJsonStructure(['price_per_km']);
+        $response->assertViewIs('delivery-settings.index');
+        $response->assertViewHas('pricePerKm');
     }
 
     public function test_2_admin_dapat_mengubah_price_per_km(): void
@@ -182,10 +183,8 @@ class DeliveryTaskTest extends TestCase
 
         $response = $this->actingAs($courier)->get("/delivery-tasks/{$task->id}");
 
-        // View belum dibuat (di luar scope tahap ini). Yang divalidasi: authorize()
-        // lolos dan data berhasil di-load sampai ke pemanggilan view.
-        $response->assertStatus(500);
-        $this->assertStringContainsString('View [delivery-tasks.show] not found', $response->exception->getMessage());
+        $response->assertStatus(200);
+        $response->assertViewIs('delivery-tasks.show');
     }
 
     public function test_11_courier_tidak_dapat_akses_task_courier_lain(): void
