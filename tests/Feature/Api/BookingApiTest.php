@@ -245,4 +245,26 @@ class BookingApiTest extends TestCase
 
         $response->assertJsonMissingPath('data.customer.password');
     }
+
+    public function test_mechanic_assignment_ditunda_untuk_pickup(): void
+    {
+        [$customer, $vehicle, $token] = $this->customerWithVehicle();
+        User::factory()->create(['role' => 'mechanic', 'is_active' => true, 'specialization' => 'mekanik_4_tak']);
+        $booking = Booking::create([
+            'nomor_booking' => Booking::generateNomorBooking(),
+            'customer_id' => $customer->id, 'vehicle_id' => $vehicle->id,
+            'tanggal' => now()->addDay(), 'waktu' => '10:00',
+            'keluhan' => 'x', 'jenis_layanan' => 'perbaikan', 'status' => 'pending',
+            'pickup_requested' => true, 'alamat_pickup' => 'Rumah', 'estimated_distance_km' => 5
+        ]);
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $adminToken = $admin->createToken('t')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->postJson("/api/v1/bookings/{$booking->id}/confirm", [])
+            ->assertOk();
+
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'waiting_pickup']);
+        $this->assertDatabaseMissing('service_orders', ['booking_id' => $booking->id]);
+    }
 }
