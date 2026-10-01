@@ -17,6 +17,30 @@ class PaymentController extends Controller
     }
 
     /**
+     * Daftar pembayaran — hanya admin yang boleh mengakses.
+     * Filter by status via query param ?status=waiting_verification|verified|rejected|all
+     */
+    public function index(): View
+    {
+        $this->authorize('verify', Payment::class);
+
+        $status = request('status', 'waiting_verification');
+
+        $payments = Payment::with([
+                'serviceOrder.booking.customer',
+                'serviceOrder.booking.vehicle',
+            ])
+            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        $pendingCount = Payment::where('status', 'waiting_verification')->count();
+
+        return view('payments.index', compact('payments', 'status', 'pendingCount'));
+    }
+
+    /**
      * Buat payment untuk service order tertentu. Amount SELALU dari
      * $order->grand_total (server), tidak pernah dari request.
      */

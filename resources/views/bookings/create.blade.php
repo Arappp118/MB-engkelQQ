@@ -133,17 +133,28 @@
                         <fieldset class="p-4 rounded-xl bg-mc-sidebar border border-mc-border space-y-4">
                             <legend class="px-2 text-sm font-semibold text-mc-text -ml-2">Layanan Antar-Jemput</legend>
                             <div class="flex items-center gap-3">
-                                <input type="checkbox" id="pickup_requested" name="pickup_requested" value="1"
-                                    @checked(old('pickup_requested'))
+                                <input type="checkbox" id="pickup_requested" name="pickup_requested" value="true"
+                                    @checked(old('pickup_requested') == 'true')
                                     class="w-4 h-4 rounded border-mc-border bg-mc-bg text-mc-orange focus:ring-mc-orange focus:ring-offset-mc-bg" />
                                 <label for="pickup_requested" class="text-sm text-mc-text">Minta kendaraan dijemput</label>
                             </div>
-                            <div id="pickup_address_section" class="{{ old('pickup_requested') ? '' : 'hidden' }}">
-                                <label for="pickup_address" class="mc-label">Alamat Penjemputan</label>
-                                <textarea id="pickup_address" name="pickup_address" rows="2"
-                                    class="mc-textarea"
-                                    placeholder="Masukkan alamat lengkap penjemputan...">{{ old('pickup_address') }}</textarea>
-                                <x-input-error :messages="$errors->get('pickup_address')" class="mt-1.5" />
+                            <div id="pickup_address_section" class="{{ old('pickup_requested') == 'true' ? '' : 'hidden' }} space-y-4">
+                                <div>
+                                    <label for="alamat_pickup" class="mc-label">Alamat Penjemputan <span class="text-red-400">*</span></label>
+                                    <textarea id="alamat_pickup" name="alamat_pickup" rows="2"
+                                        class="mc-textarea"
+                                        placeholder="Masukkan alamat lengkap penjemputan...">{{ old('alamat_pickup') }}</textarea>
+                                    <x-input-error :messages="$errors->get('alamat_pickup')" class="mt-1.5" />
+                                </div>
+                                <div>
+                                    <label for="estimated_distance_km" class="mc-label">Perkiraan Jarak (km) <span class="text-red-400">*</span></label>
+                                    <input id="estimated_distance_km" name="estimated_distance_km" type="number" step="0.1" min="0"
+                                        class="mc-input"
+                                        value="{{ old('estimated_distance_km') }}"
+                                        placeholder="Contoh: 5.5" />
+                                    <x-input-error :messages="$errors->get('estimated_distance_km')" class="mt-1.5" />
+                                    <p class="text-xs text-mc-muted mt-1">Estimasi jarak dari bengkel ke lokasi penjemputan.</p>
+                                </div>
                             </div>
                         </fieldset>
 
@@ -167,9 +178,27 @@
     <script>
         const pickupCheckbox = document.getElementById('pickup_requested');
         const pickupSection  = document.getElementById('pickup_address_section');
+        const alamatPickup = document.getElementById('alamat_pickup');
+        const estimatedDistance = document.getElementById('estimated_distance_km');
+
         if (pickupCheckbox && pickupSection) {
+            // Function to toggle disabled state
+            const toggleFields = (isChecked) => {
+                pickupSection.classList.toggle('hidden', !isChecked);
+                if (alamatPickup) alamatPickup.disabled = !isChecked;
+                if (estimatedDistance) estimatedDistance.disabled = !isChecked;
+            };
+
+            // Init state on page load
+            toggleFields(pickupCheckbox.checked);
+
             pickupCheckbox.addEventListener('change', function () {
-                pickupSection.classList.toggle('hidden', !this.checked);
+                toggleFields(this.checked);
+                // Clear values when unchecked
+                if (!this.checked) {
+                    if (alamatPickup) alamatPickup.value = '';
+                    if (estimatedDistance) estimatedDistance.value = '';
+                }
             });
         }
     </script>

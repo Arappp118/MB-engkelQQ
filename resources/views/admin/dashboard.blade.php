@@ -80,15 +80,17 @@
                 </div>
 
                 {{-- Payment Pending --}}
-                <div class="stat-card">
+                <a href="{{ route('payments.index', ['status' => 'waiting_verification']) }}"
+                   class="stat-card hover:border-red-500/40 hover:shadow-lg hover:shadow-red-500/10 transition-all group">
                     <div class="flex items-start justify-between mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center ring-1 ring-red-500/20">
+                        <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center ring-1 ring-red-500/20 group-hover:bg-red-500/20 transition-colors">
                             <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                         <span class="text-2xl font-extrabold text-white">{{ $payment_pending }}</span>
                     </div>
                     <p class="text-sm font-semibold text-mc-text">Payment Pending</p>
-                </div>
+                    <p class="text-xs text-red-400/70 mt-1 group-hover:text-red-400 transition-colors">Klik untuk verifikasi &rarr;</p>
+                </a>
 
                 {{-- Payment Verified --}}
                 <div class="stat-card">

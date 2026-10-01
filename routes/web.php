@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('service-items', ServiceItemController::class);
     Route::patch('service-items/{service_item}/stock', [ServiceItemController::class, 'updateStock'])->name('service-items.stock');
 
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::post('service-orders/{service_order}/payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
     Route::patch('payments/{payment}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
