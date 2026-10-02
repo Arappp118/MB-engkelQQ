@@ -50,8 +50,12 @@ class DeliveryTaskService
      */
     public function start(DeliveryTask $task): DeliveryTask
     {
-        if (!in_array($task->status, ['pending', 'assigned'])) {
-            throw new \RuntimeException("Tidak dapat memulai task dari status '{$task->status}'.");
+        if ($task->status !== 'assigned') {
+            throw new \RuntimeException("Tidak dapat memulai task dari status '{$task->status}'. Task harus berstatus 'assigned'.");
+        }
+
+        if (is_null($task->courier_id)) {
+            throw new \RuntimeException("Task tidak dapat dimulai karena belum memiliki kurir.");
         }
 
         return DB::transaction(function () use ($task) {
@@ -76,6 +80,10 @@ class DeliveryTaskService
     {
         if ($task->status !== 'in_progress') {
             throw new \RuntimeException("Tidak dapat menyelesaikan task dari status '{$task->status}'.");
+        }
+
+        if (is_null($task->courier_id)) {
+            throw new \RuntimeException("Task tidak dapat diselesaikan karena tidak memiliki kurir.");
         }
 
         return DB::transaction(function () use ($task) {

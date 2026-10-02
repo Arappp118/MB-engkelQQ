@@ -138,7 +138,10 @@ class DeliveryApiTest extends TestCase
     {
         [, $task] = $this->makeTask();
         $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
-        $task->update(['courier_id' => $courier->id]);
+        $task->update([
+            'courier_id' => $courier->id,
+            'status' => 'assigned',
+        ]);
         $token = $courier->createToken('t')->plainTextToken;
 
         $this->withHeader('Authorization', "Bearer {$token}")->postJson("/api/v1/delivery-tasks/{$task->id}/start")->assertOk();

@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::post('service-orders/{service_order}/payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::get('payments/{payment}/proof', [PaymentController::class, 'proof'])->name('payments.proof');
     Route::patch('payments/{payment}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
     Route::patch('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
 

@@ -63,6 +63,17 @@ class PaymentController extends Controller
         return view('payments.show', compact('payment'));
     }
 
+    public function proof(Payment $payment)
+    {
+        $this->authorize('view', $payment);
+
+        if (!$payment->proof_path || !\Illuminate\Support\Facades\Storage::exists($payment->proof_path)) {
+            abort(404, 'Bukti pembayaran tidak ditemukan.');
+        }
+
+        return \Illuminate\Support\Facades\Storage::response($payment->proof_path);
+    }
+
     public function verify(Payment $payment): RedirectResponse
     {
         $this->authorize('verify', Payment::class);

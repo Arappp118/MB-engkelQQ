@@ -23,6 +23,11 @@
                             {{ __('Booking') }}
                         </x-nav-link>
                     @endif
+                    @if (auth()->user()->isAdmin())
+                        <x-nav-link :href="route('payments.index')" :active="request()->routeIs('payments.*')">
+                            {{ __('Pembayaran') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -84,6 +89,11 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('bookings.index')" :active="request()->routeIs('bookings.*')">
                     {{ __('Booking') }}
+                </x-responsive-nav-link>
+            @endif
+            @if (auth()->user()->isAdmin())
+                <x-responsive-nav-link :href="route('payments.index')" :active="request()->routeIs('payments.*')">
+                    {{ __('Pembayaran') }}
                 </x-responsive-nav-link>
             @endif
         </div>

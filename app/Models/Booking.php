@@ -112,7 +112,7 @@ class Booking extends Model
             'service_completed'   => 'Servis Selesai',
             'waiting_payment'     => 'Menunggu Pembayaran',
             'paid'                => 'Dibayar',
-            'ready_for_delivery'  => 'Siap Diantar',
+            'ready_for_delivery'  => 'Siap Diambil',
             'completed'           => 'Selesai',
             'cancelled'           => 'Dibatalkan',
             default               => ucfirst($this->status),

@@ -371,8 +371,13 @@
                     @endif
                 </div>
 
-                {{-- Form pembayaran — customer, servis selesai, belum ada payment --}}
-                @if (auth()->user()->isCustomer() && $serviceOrder->status === 'completed' && !$serviceOrder->payment)
+                {{-- Form pembayaran — customer, servis selesai, belum ada payment atau ditolak --}}
+                @php
+                    $canPay = auth()->user()->isCustomer() && 
+                              $serviceOrder->status === 'completed' && 
+                              (!$serviceOrder->payment || $serviceOrder->payment->status === 'rejected');
+                @endphp
+                @if ($canPay)
                     <div class="mt-6 border-t pt-4">
                         <p class="text-sm font-medium text-gray-700 mb-3">Ajukan Pembayaran</p>
                         <form action="{{ route('payments.store', $serviceOrder) }}"
@@ -433,23 +438,35 @@
 
                             <button type="submit"
                                 class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                                Ajukan Pembayaran
+                                {{ $serviceOrder->payment && $serviceOrder->payment->status === 'rejected' ? 'Bayar Lagi' : 'Ajukan Pembayaran' }}
                             </button>
                         </form>
                     </div>
                 @endif
 
                 @if ($serviceOrder->status === 'completed' && auth()->user()->isCustomer() && $serviceOrder->payment)
-                    <div class="mt-4 p-3 bg-emerald-50 rounded-md border border-emerald-200">
-                        <p class="text-sm text-emerald-800">
-                            Servis kendaraan Anda telah selesai.
-                            Status pembayaran:
-                            <strong>{{ $serviceOrder->payment->status_label }}</strong>
-                            &middot;
-                            <a href="{{ route('payments.show', $serviceOrder->payment) }}"
-                                class="text-indigo-600 hover:underline">Detail</a>
-                        </p>
-                    </div>
+                    @if ($serviceOrder->payment->status === 'rejected')
+                        <div class="mt-4 p-3 bg-red-50 rounded-md border border-red-200">
+                            <p class="text-sm text-red-800 mb-1">
+                                <strong>Pembayaran Anda Ditolak.</strong>
+                            </p>
+                            @if ($serviceOrder->payment->notes)
+                                <p class="text-sm text-red-700 mb-2">Alasan: {{ $serviceOrder->payment->notes }}</p>
+                            @endif
+                            <p class="text-xs text-red-600">Silakan ajukan pembayaran kembali menggunakan form di atas.</p>
+                        </div>
+                    @else
+                        <div class="mt-4 p-3 bg-emerald-50 rounded-md border border-emerald-200">
+                            <p class="text-sm text-emerald-800">
+                                Servis kendaraan Anda telah selesai.
+                                Status pembayaran:
+                                <strong>{{ $serviceOrder->payment->status_label }}</strong>
+                                &middot;
+                                <a href="{{ route('payments.show', $serviceOrder->payment) }}"
+                                    class="text-indigo-600 hover:underline">Detail</a>
+                            </p>
+                        </div>
+                    @endif
                 @endif
             </div>
 

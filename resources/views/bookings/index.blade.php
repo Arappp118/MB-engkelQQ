@@ -60,7 +60,7 @@
                         'service_completed'  => ['badge-teal', 'Servis Selesai'],
                         'waiting_payment'    => ['badge-orange', 'Tunggu Bayar'],
                         'paid'               => ['badge-lime', 'Dibayar'],
-                        'ready_for_delivery' => ['badge-violet', 'Siap Diantar'],
+                        'ready_for_delivery' => ['badge-violet', 'Siap Diambil'],
                         'completed'          => ['badge-green', 'Selesai'],
                         'cancelled'          => ['badge-red', 'Dibatalkan'],
                     ];

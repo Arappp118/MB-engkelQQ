@@ -58,6 +58,8 @@ class DeliveryTaskController extends Controller
 
     public function complete(CompleteDeliveryTaskRequest $request, DeliveryTask $deliveryTask): RedirectResponse
     {
+        $this->authorize('complete', $deliveryTask);
+
         try {
             $this->deliveryTaskService->complete($deliveryTask);
         } catch (\RuntimeException $e) {
