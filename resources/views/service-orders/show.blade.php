@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-gray-900 leading-tight">
                 Detail Service Order
-                <span class="text-gray-400 font-normal text-base ml-2">#{{ $serviceOrder->id }}</span>
+                <span class="text-gray-500 font-normal text-base ml-2">#{{ $serviceOrder->id }}</span>
             </h2>
             <a href="{{ route('service-orders.index') }}" class="text-sm text-gray-600 hover:underline">
                 &larr; Kembali
@@ -403,7 +403,7 @@
                                     <label for="payment_method"
                                         class="block text-xs text-gray-500 mb-1">Metode Pembayaran <span class="text-red-500">*</span></label>
                                     <select id="payment_method" name="payment_method" required
-                                        class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                                        class="block w-full rounded-md bg-white border-gray-300 text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm text-sm">
                                         <option value="" disabled {{ old('payment_method') ? '' : 'selected' }}>-- Pilih --</option>
                                         <option value="cash" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Tunai (Cash)</option>
                                         <option value="transfer" {{ old('payment_method') === 'transfer' ? 'selected' : '' }}>Transfer Bank</option>
@@ -417,8 +417,8 @@
                                         class="block text-xs text-gray-500 mb-1">Bukti Pembayaran</label>
                                     <input id="proof" name="proof" type="file"
                                         accept=".jpg,.jpeg,.png,.pdf"
-                                        class="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
-                                    <p class="text-xs text-gray-400 mt-1">Wajib untuk Transfer/QRIS. Format: JPG, PNG, PDF. Maks 2MB.</p>
+                                        class="block w-full text-sm text-gray-900 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
+                                    <p class="text-xs text-gray-500 mt-1">Wajib untuk Transfer/QRIS. Format: JPG, PNG, PDF. Maks 2MB.</p>
                                     <x-input-error :messages="$errors->get('proof')" class="mt-1" />
                                 </div>
                             </div>
@@ -427,8 +427,8 @@
                                 <label for="pay_notes"
                                     class="block text-xs text-gray-500 mb-1">Catatan (opsional)</label>
                                 <input id="pay_notes" name="notes" type="text" maxlength="500"
-                                    value="{{ old('notes') }}"
-                                    class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                                    value="{{ old('notes') }}" placeholder="Contoh: Titip di satpam"
+                                    class="block w-full rounded-md bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm text-sm">
                             </div>
 
                             <button type="submit"
