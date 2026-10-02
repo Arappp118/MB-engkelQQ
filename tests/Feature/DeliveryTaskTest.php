@@ -246,7 +246,7 @@ class DeliveryTaskTest extends TestCase
         $this->assertEquals('completed', $booking->status);
     }
 
-    public function test_15_delivery_task_tidak_duplicate_setelah_payment_verified(): void
+    public function test_15_payment_verified_tidak_membuat_delivery_task(): void
     {
         [$admin, , $customer, $mechanic] = $this->makeUsers();
         [$booking] = $this->makeBookingWithPickupTask($customer);
@@ -267,7 +267,7 @@ class DeliveryTaskTest extends TestCase
 
         $countAfter = DeliveryTask::where('booking_id', $booking->id)->count();
 
-        $this->assertEquals($countBefore + 1, $countAfter); // +1 delivery task, no duplicate
+        $this->assertEquals($countBefore, $countAfter); // Tidak ada tambahan delivery task
     }
 
     public function test_16_perubahan_tarif_tidak_mengubah_fee_transaksi_lama(): void
@@ -307,5 +307,34 @@ class DeliveryTaskTest extends TestCase
         ]);
 
         $response->assertForbidden();
+    }
+    public function test_19_task_pending_tanpa_courier_tidak_dapat_start(): void
+    {
+        [$admin, $courier, $customer] = $this->makeUsers();
+        [, $task] = $this->makeBookingWithPickupTask($customer);
+
+        $response = $this->actingAs($admin)->patch("/delivery-tasks/{$task->id}/start");
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('delivery_tasks', [
+            'id' => $task->id,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_20_task_tanpa_courier_tidak_dapat_complete(): void
+    {
+        [$admin, $courier, $customer] = $this->makeUsers();
+        [, $task] = $this->makeBookingWithPickupTask($customer);
+
+        $task->update(['status' => 'in_progress', 'courier_id' => null]);
+
+        $response = $this->actingAs($admin)->patch("/delivery-tasks/{$task->id}/complete");
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('delivery_tasks', [
+            'id' => $task->id,
+            'status' => 'in_progress',
+        ]);
     }
 }

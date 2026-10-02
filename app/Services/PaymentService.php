@@ -82,14 +82,7 @@ class PaymentService
 
             $booking = $payment->serviceOrder->booking;
             $booking->update(['status' => 'paid']);
-
-            // Create delivery task if pickup was requested
-            if ($booking->pickup_requested) {
-                $booking->update(['status' => 'ready_for_delivery']);
-                $this->createDeliveryTask($booking);
-            } else {
-                $booking->update(['status' => 'completed']);
-            }
+            $booking->update(['status' => 'completed']);
 
             $this->notificationService->notify(
                 $booking->customer,
@@ -124,22 +117,4 @@ class PaymentService
         return $payment->fresh();
     }
 
-    private function createDeliveryTask($booking): void
-    {
-        $serviceOrder = $booking->serviceOrder;
-        $deliveryTask = \App\Models\DeliveryTask::create([
-            'booking_id'   => $booking->id,
-            'courier_id'   => null,
-            'type'         => 'delivery',
-            'address'      => $booking->alamat_pickup,
-            'distance_km'  => $booking->estimated_distance_km,
-            'delivery_fee' => $serviceOrder->delivery_fee,
-            'status'       => 'pending',
-        ]);
-
-        AuditLog::record('delivery_task.created', 'delivery_task', $deliveryTask->id, [
-            'type' => 'delivery',
-            'booking_id' => $booking->id,
-        ]);
-    }
 }

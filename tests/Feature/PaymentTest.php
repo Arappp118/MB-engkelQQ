@@ -252,7 +252,7 @@ class PaymentTest extends TestCase
         $this->actingAs($admin)->patch("/payments/{$payment->id}/verify");
 
         $order->booking->refresh();
-        $this->assertContains($order->booking->status, ['paid', 'completed', 'ready_for_delivery']);
+        $this->assertEquals('completed', $order->booking->status);
     }
 
     public function test_16_auditlog_tercatat_saat_payment_dibuat(): void
