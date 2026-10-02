@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Delivery\UpdateDeliverySettingRequest;
 use App\Models\DeliverySetting;
 use App\Services\DeliveryTaskService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class DeliverySettingController extends Controller
 {
@@ -18,11 +18,11 @@ class DeliverySettingController extends Controller
      * Semua role login boleh lihat tarif (dibutuhkan untuk transparansi
      * biaya), tapi hanya admin yang boleh mengubahnya (lihat update()).
      */
-    public function show(): JsonResponse
+    public function show(): View
     {
-        return response()->json([
-            'price_per_km' => (float) DeliverySetting::get('price_per_km', 3000),
-        ]);
+        $pricePerKm = (float) DeliverySetting::get('price_per_km', 3000);
+
+        return view('delivery-settings.index', compact('pricePerKm'));
     }
 
     public function update(UpdateDeliverySettingRequest $request): RedirectResponse

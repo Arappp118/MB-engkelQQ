@@ -99,10 +99,8 @@ class ServiceItemTest extends TestCase
 
         $response = $this->actingAs($mechanic)->get('/service-items');
 
-        // View belum dibuat (di luar scope tahap ini). Yang divalidasi: authorize()
-        // lolos dan data berhasil di-load sampai ke pemanggilan view.
-        $response->assertStatus(500);
-        $this->assertStringContainsString('View [service-items.index] not found', $response->exception->getMessage());
+        $response->assertStatus(200);
+        $response->assertViewIs('service-items.index');
     }
 
     public function test_item_nonaktif_tidak_dapat_digunakan_untuk_transaksi(): void

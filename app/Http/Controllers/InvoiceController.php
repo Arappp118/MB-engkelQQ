@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ServiceOrder;
 use App\Services\InvoiceService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
@@ -18,36 +18,15 @@ class InvoiceController extends Controller
      * snapshot yang sudah tersimpan — tidak ada perhitungan ulang dari
      * harga master saat ini, dan tidak ada input dari request/frontend.
      */
-    public function show(ServiceOrder $serviceOrder): JsonResponse
+    public function show(ServiceOrder $serviceOrder): View
     {
         $this->authorize('view', $serviceOrder);
 
         $data = $this->invoiceService->getData($serviceOrder);
 
-        return response()->json([
-            'invoice_number' => $data['invoice_number'],
-            'nomor_booking'  => $data['nomor_booking'],
-            'tanggal'        => $data['tanggal'],
-            'customer'       => [
-                'name'  => $data['customer']->name,
-                'email' => $data['customer']->email,
-            ],
-            'vehicle' => [
-                'nomor_polisi' => $data['vehicle']->nomor_polisi,
-                'merk'         => $data['vehicle']->merk,
-                'model'        => $data['vehicle']->model,
-            ],
-            'items' => $data['items']->map(fn ($item) => [
-                'name'     => $item->item_name_snapshot,
-                'price'    => $item->price_snapshot,
-                'quantity' => $item->quantity,
-                'subtotal' => $item->subtotal,
-            ]),
-            'subtotal'       => $data['subtotal'],
-            'delivery_fee'   => $data['delivery_fee'],
-            'grand_total'    => $data['grand_total'],
-            'payment_status' => $data['payment']?->status,
-            'payment_method' => $data['payment']?->payment_method,
+        return view('invoices.show', [
+            'serviceOrder' => $serviceOrder,
+            'invoiceData'  => $data
         ]);
     }
 }

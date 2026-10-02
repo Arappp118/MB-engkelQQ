@@ -73,4 +73,19 @@ class BookingController extends Controller
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Booking berhasil dikonfirmasi.');
     }
+
+    public function arrive(Booking $booking): RedirectResponse
+    {
+        // Use confirm policy since both are admin actions for status transition
+        $this->authorize('confirm', $booking);
+
+        try {
+            $this->bookingService->arriveAtWorkshop($booking);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('bookings.show', $booking)
+            ->with('success', 'Kendaraan berhasil tiba di bengkel.');
+    }
 }

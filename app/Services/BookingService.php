@@ -68,30 +68,16 @@ class BookingService
     {
         return DB::transaction(function () use ($booking) {
             $this->transitionStatus($booking, 'confirmed');
-            $this->transitionStatus($booking, $booking->pickup_requested ? 'waiting_pickup' : 'waiting_service');
-
-            // Auto-assign mechanic
-            $mechanic = $this->mechanicAssignment->assign($booking);
-            if ($mechanic) {
-                ServiceOrder::create([
-                    'booking_id'  => $booking->id,
-                    'mechanic_id' => $mechanic->id,
-                    'status'      => 'pending',
-                ]);
-                $this->transitionStatus($booking, 'assigned');
-
-                AuditLog::record('mechanic.assigned', 'booking', $booking->id, [
-                    'mechanic_id' => $mechanic->id,
-                ]);
-
-                $this->notificationService->notify(
-                    $mechanic,
-                    'Pekerjaan Baru',
-                    "Pekerjaan baru: Booking #{$booking->nomor_booking}",
-                    'job',
-                    'Booking',
-                    $booking->id
-                );
+            
+            $isPickup = (bool) $booking->pickup_requested;
+            
+            if ($isPickup) {
+                $this->transitionStatus($booking, 'waiting_pickup');
+                // STOP here, do not assign mechanic yet for pickup
+            } else {
+                $this->transitionStatus($booking, 'waiting_service');
+                // Auto-assign mechanic for non-pickup
+                $this->assignMechanic($booking);
             }
 
             $this->notificationService->notify(
@@ -105,6 +91,47 @@ class BookingService
 
             return $booking->fresh();
         });
+    }
+
+    public function arriveAtWorkshop(Booking $booking): Booking
+    {
+        return DB::transaction(function () use ($booking) {
+            $this->transitionStatus($booking, 'waiting_service');
+            $this->assignMechanic($booking);
+            return $booking->fresh();
+        });
+    }
+
+    public function assignMechanic(Booking $booking): bool
+    {
+        if ($booking->status !== 'waiting_service') {
+            return false;
+        }
+
+        $mechanic = $this->mechanicAssignment->assign($booking);
+        if ($mechanic) {
+            ServiceOrder::create([
+                'booking_id'  => $booking->id,
+                'mechanic_id' => $mechanic->id,
+                'status'      => 'pending',
+            ]);
+            $this->transitionStatus($booking, 'assigned');
+
+            AuditLog::record('mechanic.assigned', 'booking', $booking->id, [
+                'mechanic_id' => $mechanic->id,
+            ]);
+
+            $this->notificationService->notify(
+                $mechanic,
+                'Pekerjaan Baru',
+                "Pekerjaan baru: Booking #{$booking->nomor_booking}",
+                'job',
+                'Booking',
+                $booking->id
+            );
+            return true;
+        }
+        return false;
     }
 
     public function cancel(Booking $booking, string $reason = ''): Booking

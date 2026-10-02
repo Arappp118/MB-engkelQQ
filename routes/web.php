@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('bookings', BookingController::class)->only(['index', 'create', 'store', 'show']);
     Route::patch('bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
     Route::patch('bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
+    Route::patch('bookings/{booking}/arrive', [BookingController::class, 'arrive'])->name('bookings.arrive');
 
     Route::resource('service-orders', ServiceOrderController::class)->only(['index', 'show']);
     Route::patch('service-orders/{service_order}/start', [ServiceOrderController::class, 'start'])->name('service-orders.start');
@@ -41,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('service-items', ServiceItemController::class);
     Route::patch('service-items/{service_item}/stock', [ServiceItemController::class, 'updateStock'])->name('service-items.stock');
 
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::post('service-orders/{service_order}/payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
     Route::patch('payments/{payment}/verify', [PaymentController::class, 'verify'])->name('payments.verify');

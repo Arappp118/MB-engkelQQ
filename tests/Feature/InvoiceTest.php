@@ -78,7 +78,10 @@ class InvoiceTest extends TestCase
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice");
 
         $response->assertOk();
-        $response->assertJsonPath('grand_total', 110000);
+        $response->assertViewIs('invoices.show');
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['grand_total'] == 110000;
+        });
     }
 
     public function test_customer_tidak_dapat_melihat_invoice_customer_lain(): void
@@ -99,7 +102,9 @@ class InvoiceTest extends TestCase
 
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice");
 
-        $response->assertJsonPath('items.0.price', 100000); // tetap snapshot lama
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['items'][0]->price_snapshot == 100000;
+        });
     }
 
     public function test_perubahan_master_price_tidak_mengubah_invoice_lama(): void
@@ -109,8 +114,9 @@ class InvoiceTest extends TestCase
 
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice");
 
-        $response->assertJsonPath('subtotal', 100000);
-        $response->assertJsonPath('grand_total', 110000);
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['subtotal'] == 100000 && $data['grand_total'] == 110000;
+        });
     }
 
     public function test_invoice_menggunakan_delivery_fee_snapshot(): void
@@ -119,7 +125,9 @@ class InvoiceTest extends TestCase
 
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice");
 
-        $response->assertJsonPath('delivery_fee', 15000);
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['delivery_fee'] == 15000;
+        });
     }
 
     public function test_perubahan_tarif_delivery_tidak_mengubah_invoice_lama(): void
@@ -130,7 +138,9 @@ class InvoiceTest extends TestCase
 
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice");
 
-        $response->assertJsonPath('delivery_fee', 10000); // tidak berubah
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['delivery_fee'] == 10000;
+        });
     }
 
     public function test_total_invoice_benar_dari_server(): void
@@ -139,9 +149,11 @@ class InvoiceTest extends TestCase
 
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice");
 
-        $response->assertJsonPath('subtotal', 75000);
-        $response->assertJsonPath('delivery_fee', 5000);
-        $response->assertJsonPath('grand_total', 80000);
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['subtotal'] == 75000 &&
+                   $data['delivery_fee'] == 5000 &&
+                   $data['grand_total'] == 80000;
+        });
     }
 
     public function test_manipulasi_total_dari_request_tidak_berpengaruh(): void
@@ -151,7 +163,9 @@ class InvoiceTest extends TestCase
         // Invoice endpoint GET murni, tidak menerima input apapun untuk hitung ulang
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice?grand_total=1&total=1");
 
-        $response->assertJsonPath('grand_total', 110000);
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['grand_total'] == 110000;
+        });
     }
 
     public function test_nomor_invoice_unik_per_order(): void
@@ -163,8 +177,8 @@ class InvoiceTest extends TestCase
         $response2 = $this->actingAs($customer2)->get("/service-orders/{$order2->id}/invoice");
 
         $this->assertNotEquals(
-            $response1->json('invoice_number'),
-            $response2->json('invoice_number')
+            $response1->original->getData()['invoiceData']['invoice_number'],
+            $response2->original->getData()['invoiceData']['invoice_number']
         );
     }
 
@@ -174,7 +188,9 @@ class InvoiceTest extends TestCase
 
         $response = $this->actingAs($customer)->get("/service-orders/{$order->id}/invoice");
 
-        $response->assertJsonPath('payment_status', 'verified');
+        $response->assertViewHas('invoiceData', function ($data) {
+            return $data['payment']->status === 'verified';
+        });
     }
 
     public function test_unauthorized_menghasilkan_403(): void
