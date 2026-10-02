@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliverySettingController;
@@ -65,6 +66,38 @@ Route::middleware('auth')->group(function () {
 // ── Admin ────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
+
+    // ── User & Staff Management ───────────────────────────────────────────
+    Route::get('/users/customers', [UserManagementController::class, 'customers'])
+        ->name('users.customers');
+
+    // Mechanic
+    Route::get('/users/mechanics', [UserManagementController::class, 'mechanics'])
+        ->name('users.mechanics');
+    Route::get('/users/mechanics/create', [UserManagementController::class, 'createMechanic'])
+        ->name('users.mechanics.create');
+    Route::post('/users/mechanics', [UserManagementController::class, 'storeMechanic'])
+        ->name('users.mechanics.store');
+    Route::get('/users/mechanics/{user}/edit', [UserManagementController::class, 'editMechanic'])
+        ->name('users.mechanics.edit');
+    Route::patch('/users/mechanics/{user}', [UserManagementController::class, 'updateMechanic'])
+        ->name('users.mechanics.update');
+    Route::patch('/users/mechanics/{user}/toggle', [UserManagementController::class, 'toggleMechanic'])
+        ->name('users.mechanics.toggle');
+
+    // Courier
+    Route::get('/users/couriers', [UserManagementController::class, 'couriers'])
+        ->name('users.couriers');
+    Route::get('/users/couriers/create', [UserManagementController::class, 'createCourier'])
+        ->name('users.couriers.create');
+    Route::post('/users/couriers', [UserManagementController::class, 'storeCourier'])
+        ->name('users.couriers.store');
+    Route::get('/users/couriers/{user}/edit', [UserManagementController::class, 'editCourier'])
+        ->name('users.couriers.edit');
+    Route::patch('/users/couriers/{user}', [UserManagementController::class, 'updateCourier'])
+        ->name('users.couriers.update');
+    Route::patch('/users/couriers/{user}/toggle', [UserManagementController::class, 'toggleCourier'])
+        ->name('users.couriers.toggle');
 });
 
 // ── Mekanik ──────────────────────────────────────────────────────────────

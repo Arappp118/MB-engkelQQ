@@ -170,6 +170,26 @@
                         </svg>
                         Pengaturan Tarif
                     </a>
+
+                    <p class="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-widest text-mc-muted/60">Manajemen User</p>
+                    <a href="{{ route('admin.users.customers') }}" class="nav-item {{ request()->routeIs('admin.users.customers') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        Pelanggan
+                    </a>
+                    <a href="{{ route('admin.users.mechanics') }}" class="nav-item {{ request()->routeIs('admin.users.mechanics*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Mekanik
+                    </a>
+                    <a href="{{ route('admin.users.couriers') }}" class="nav-item {{ request()->routeIs('admin.users.couriers*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 1m0 0h10m-10 0l2-1m8 1V6a1 1 0 00-1-1h-2m0 0V4m0 2H9"/>
+                        </svg>
+                        Kurir
+                    </a>
                 @endif
 
                 {{-- Shared --}}
