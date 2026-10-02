@@ -165,7 +165,7 @@
                             </label>
                             <textarea id="diagnosis_mechanic" name="diagnosis_mechanic" rows="4"
                                 required maxlength="2000"
-                                class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">{{ old('diagnosis_mechanic', $serviceOrder->diagnosis_mechanic) }}</textarea>
+                                class="block w-full rounded-md bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm text-sm">{{ old('diagnosis_mechanic', $serviceOrder->diagnosis_mechanic) }}</textarea>
                             <x-input-error :messages="$errors->get('diagnosis_mechanic')" class="mt-1" />
                         </div>
 
@@ -175,7 +175,7 @@
                                 Catatan Tambahan (opsional)
                             </label>
                             <textarea id="notes" name="notes" rows="2" maxlength="1000"
-                                class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">{{ old('notes', $serviceOrder->notes) }}</textarea>
+                                class="block w-full rounded-md bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm text-sm">{{ old('notes', $serviceOrder->notes) }}</textarea>
                             <x-input-error :messages="$errors->get('notes')" class="mt-1" />
                         </div>
 
