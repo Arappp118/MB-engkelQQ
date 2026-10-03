@@ -257,7 +257,10 @@
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
             <!-- Top Bar -->
-            <header class="flex-shrink-0 h-14 bg-mc-sidebar/80 backdrop-blur-md border-b border-mc-border flex items-center px-4 gap-4">
+            <header class="relative z-[9999] flex-shrink-0 h-14 border-b border-mc-border flex items-center px-4 gap-4">
+                <!-- Background with backdrop filter (separated to prevent clipping absolute children) -->
+                <div class="absolute inset-0 bg-mc-sidebar/80 backdrop-blur-md -z-10"></div>
+
                 <!-- Mobile hamburger -->
                 <button
                     @click="sidebarOpen = !sidebarOpen"
@@ -317,7 +320,7 @@
                             x-transition:leave="transition ease-in duration-75"
                             x-transition:leave-start="opacity-100 scale-100"
                             x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute right-0 mt-2 w-48 bg-mc-card border border-mc-border rounded-xl shadow-xl z-50 overflow-hidden"
+                            class="absolute right-0 mt-2 w-48 bg-mc-card border border-mc-border rounded-xl shadow-xl z-[9999] overflow-hidden origin-top-right"
                         >
                             <div class="px-4 py-3 border-b border-mc-border">
                                 <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
