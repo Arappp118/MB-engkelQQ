@@ -36,7 +36,7 @@
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
             class="fixed inset-y-0 left-0 z-40 w-64 bg-mc-sidebar border-r border-mc-border
                    transform transition-transform duration-250 ease-out
-                   lg:static lg:translate-x-0 lg:flex lg:flex-col flex-shrink-0"
+                   flex flex-col lg:static lg:translate-x-0 flex-shrink-0"
         >
             <!-- Logo -->
             <div class="flex items-center gap-3 px-5 py-5 border-b border-mc-border flex-shrink-0">
@@ -257,14 +257,12 @@
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
             <!-- Top Bar -->
-            <header class="relative z-[9999] flex-shrink-0 h-14 border-b border-mc-border flex items-center px-4 gap-4">
-                <!-- Background with backdrop filter (separated to prevent clipping absolute children) -->
-                <div class="absolute inset-0 bg-mc-sidebar/80 backdrop-blur-md -z-10"></div>
+            <header class="relative z-20 flex-shrink-0 h-14 bg-mc-sidebar border-b border-mc-border flex items-center px-4 gap-4">
 
                 <!-- Mobile hamburger -->
                 <button
                     @click="sidebarOpen = !sidebarOpen"
-                    class="lg:hidden p-2 rounded-lg text-mc-muted hover:text-white hover:bg-mc-card transition-colors"
+                    class="lg:hidden p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-mc-muted hover:text-white hover:bg-mc-card transition-colors"
                     aria-label="Toggle menu"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,7 +283,7 @@
                 <div class="flex items-center gap-2">
                     <!-- Notifications Bell -->
                     <a href="{{ route('notifications.index') }}"
-                        class="relative p-2 rounded-lg text-mc-muted hover:text-white hover:bg-mc-card transition-colors"
+                        class="relative p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-mc-muted hover:text-white hover:bg-mc-card transition-colors"
                         aria-label="Notifikasi">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -297,16 +295,17 @@
                     </a>
 
                     <!-- User Dropdown -->
-                    <div x-data="{ open: false }" class="relative">
+                    <div x-data="{ open: false }" class="relative" @keydown.escape.window="open = false">
                         <button
                             @click="open = !open"
-                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-mc-card transition-colors text-sm"
+                            class="flex items-center gap-2 px-3 py-1.5 min-h-[38px] rounded-lg hover:bg-mc-card transition-colors text-sm"
+                            aria-label="User menu"
                         >
-                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-mc-orange to-orange-800 flex items-center justify-center text-white text-xs font-bold">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-mc-orange to-orange-800 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
                             <span class="hidden sm:block text-mc-text font-medium max-w-24 truncate">{{ auth()->user()->name }}</span>
-                            <svg class="w-3 h-3 text-mc-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3 h-3 text-mc-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -320,15 +319,16 @@
                             x-transition:leave="transition ease-in duration-75"
                             x-transition:leave-start="opacity-100 scale-100"
                             x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute right-0 mt-2 w-48 bg-mc-card border border-mc-border rounded-xl shadow-xl z-[9999] overflow-hidden origin-top-right"
+                            class="absolute right-0 mt-2 w-48 bg-mc-card border border-mc-border rounded-xl shadow-xl z-50 overflow-hidden origin-top-right"
+                            style="display: none;"
                         >
                             <div class="px-4 py-3 border-b border-mc-border">
-                                <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
+                                <p class="text-sm font-semibold text-white truncate">{{ auth()->user()->name }}</p>
                                 <p class="text-xs text-mc-muted truncate">{{ auth()->user()->email }}</p>
                             </div>
                             <div class="py-1">
                                 <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-mc-text hover:text-white hover:bg-mc-sidebar transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    <svg class="w-4 h-4 text-mc-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                     Profil Saya
                                 </a>
                                 <form method="POST" action="{{ route('logout') }}">

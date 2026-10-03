@@ -1,76 +1,88 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Service Order</h2>
-        </div>
+        <h2 class="font-semibold text-xl text-white leading-tight">Service Order</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
+    <div class="space-y-6 animate-fade-in">
+        {{-- Page Header --}}
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-mc-text">Service Order</h1>
+                <p class="text-sm text-mc-muted mt-0.5">Daftar pengerjaan dan status servis motor</p>
+            </div>
+        </div>
 
-            @if (session('success'))
-                <div class="bg-green-100 border border-green-300 text-green-800 rounded-md p-4 text-sm">
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="bg-red-100 border border-red-300 text-red-800 rounded-md p-4 text-sm">
-                    {{ session('error') }}
-                </div>
-            @endif
+        {{-- Flash Messages --}}
+        @if (session('success'))
+            <div class="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl p-4 text-sm">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-4 text-sm">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
 
-            <div class="bg-white shadow-sm rounded-lg overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 text-left text-gray-500 uppercase text-xs tracking-wider">
-                        <tr>
-                            <th scope="col" class="p-4">No. Booking</th>
-                            <th scope="col" class="p-4">Kendaraan</th>
+        <div class="mc-card p-0 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-mc-border bg-mc-sidebar/60">
+                            <th scope="col" class="text-left px-5 py-3 text-mc-muted font-semibold text-xs uppercase tracking-wider">No. Booking</th>
+                            <th scope="col" class="text-left px-5 py-3 text-mc-muted font-semibold text-xs uppercase tracking-wider">Kendaraan</th>
                             @if (auth()->user()->isAdmin() || auth()->user()->isCustomer())
-                                <th scope="col" class="p-4">Mekanik</th>
+                                <th scope="col" class="text-left px-5 py-3 text-mc-muted font-semibold text-xs uppercase tracking-wider">Mekanik</th>
                             @endif
                             @if (auth()->user()->isAdmin())
-                                <th scope="col" class="p-4">Customer</th>
+                                <th scope="col" class="text-left px-5 py-3 text-mc-muted font-semibold text-xs uppercase tracking-wider">Customer</th>
                             @endif
-                            <th scope="col" class="p-4">Status</th>
-                            <th scope="col" class="p-4">Total</th>
-                            <th scope="col" class="p-4"><span class="sr-only">Aksi</span></th>
+                            <th scope="col" class="text-left px-5 py-3 text-mc-muted font-semibold text-xs uppercase tracking-wider">Status</th>
+                            <th scope="col" class="text-right px-5 py-3 text-mc-muted font-semibold text-xs uppercase tracking-wider">Total</th>
+                            <th scope="col" class="text-right px-5 py-3 text-mc-muted font-semibold text-xs uppercase tracking-wider"><span class="sr-only">Aksi</span></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-mc-border/50">
                         @forelse ($orders as $order)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="p-4 font-medium text-gray-900">
+                            <tr class="hover:bg-mc-sidebar/30 transition-colors">
+                                <td class="px-5 py-3.5 font-mono font-bold text-white">
                                     {{ $order->booking->nomor_booking ?? '-' }}
                                 </td>
-                                <td class="p-4 text-gray-700">
+                                <td class="px-5 py-3.5 text-mc-text">
                                     @if ($order->booking?->vehicle)
-                                        <span class="font-medium">{{ $order->booking->vehicle->merk }}
+                                        <span class="font-medium text-white">{{ $order->booking->vehicle->merk }}
                                             {{ $order->booking->vehicle->model }}</span>
                                         <br>
-                                        <span class="text-xs text-gray-500">
+                                        <span class="text-xs text-mc-muted font-mono">
                                             {{ $order->booking->vehicle->nomor_polisi }}
                                         </span>
                                     @else
-                                        <span class="text-gray-400">-</span>
+                                        <span class="text-mc-muted">-</span>
                                     @endif
                                 </td>
                                 @if (auth()->user()->isAdmin() || auth()->user()->isCustomer())
-                                    <td class="p-4 text-gray-600">
+                                    <td class="px-5 py-3.5 text-mc-text">
                                         {{ $order->mechanic?->name ?? '-' }}
                                     </td>
                                 @endif
                                 @if (auth()->user()->isAdmin())
-                                    <td class="p-4 text-gray-600">
+                                    <td class="px-5 py-3.5 text-mc-text">
                                         {{ $order->booking?->customer?->name ?? '-' }}
                                     </td>
                                 @endif
-                                <td class="p-4">
+                                <td class="px-5 py-3.5">
                                     @php
-                                        $statusColor = match($order->status) {
-                                            'pending'    => 'bg-yellow-100 text-yellow-800',
-                                            'in_progress'=> 'bg-blue-100 text-blue-800',
-                                            'completed'  => 'bg-emerald-100 text-emerald-800',
-                                            default      => 'bg-gray-100 text-gray-700',
+                                        $badgeClass = match($order->status) {
+                                            'pending'    => 'badge-yellow',
+                                            'in_progress'=> 'badge-orange',
+                                            'completed'  => 'badge-green',
+                                            default      => 'badge-gray',
                                         };
                                         $statusLabel = match($order->status) {
                                             'pending'    => 'Menunggu',
@@ -79,32 +91,32 @@
                                             default      => ucfirst($order->status),
                                         };
                                     @endphp
-                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold {{ $statusColor }}">
+                                    <span class="badge {{ $badgeClass }}">
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
-                                <td class="p-4 text-gray-700">
+                                <td class="px-5 py-3.5 text-right font-bold text-mc-text">
                                     @if ($order->grand_total)
                                         Rp{{ number_format($order->grand_total, 0, ',', '.') }}
                                     @else
-                                        <span class="text-gray-400">-</span>
+                                        <span class="text-mc-muted font-normal">-</span>
                                     @endif
                                 </td>
-                                <td class="p-4 text-right">
+                                <td class="px-5 py-3.5 text-right">
                                     <a href="{{ route('service-orders.show', $order) }}"
-                                        class="text-indigo-600 hover:underline font-medium">
-                                        Detail
+                                        class="btn-secondary text-xs px-3 py-1.5 inline-flex">
+                                        Detail &rarr;
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="p-10 text-center text-gray-400">
-                                    <p class="text-base font-medium">Belum ada service order.</p>
+                                <td colspan="7" class="px-5 py-12 text-center text-mc-muted">
+                                    <p class="text-base font-medium text-mc-text">Belum ada service order.</p>
                                     <p class="text-sm mt-1">
                                         @if (auth()->user()->isCustomer())
                                             <a href="{{ route('bookings.create') }}"
-                                                class="text-indigo-600 hover:underline">Buat booking baru</a>
+                                                class="text-mc-orange hover:underline font-semibold">Buat booking baru</a>
                                             untuk memulai servis kendaraan Anda.
                                         @else
                                             Tidak ada data saat ini.
@@ -118,7 +130,7 @@
             </div>
 
             @if ($orders->hasPages())
-                <div class="mt-4">
+                <div class="px-5 py-4 border-t border-mc-border">
                     {{ $orders->links() }}
                 </div>
             @endif

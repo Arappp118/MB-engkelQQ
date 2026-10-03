@@ -199,34 +199,34 @@
                             </div>
                             <div class="text-sm text-mc-text font-bold">Rp{{ number_format($payment->amount, 0, ',', '.') }}</div>
                             <div class="text-xs text-mc-muted">{{ $payment->payment_method_label }} &middot; {{ $payment->paid_at?->format('d M Y H:i') ?? '—' }}</div>
-                            <div class="flex flex-wrap gap-2">
+                            <div class="grid grid-cols-2 gap-2 pt-1">
                                 @if ($payment->proof_path)
                                     <a href="{{ route('payments.proof', $payment) }}" target="_blank"
-                                       class="flex-1 text-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                       class="inline-flex items-center justify-center px-3 py-2.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                                         Lihat Bukti
                                     </a>
                                 @endif
                                 <a href="{{ route('payments.show', $payment) }}"
-                                   class="flex-1 text-center px-3 py-2 rounded-lg text-xs font-semibold text-mc-muted bg-mc-sidebar border border-mc-border hover:text-mc-text transition-colors">
+                                   class="inline-flex items-center justify-center px-3 py-2.5 rounded-lg text-xs font-semibold text-mc-muted bg-mc-sidebar border border-mc-border hover:text-mc-text transition-colors">
                                     Detail
                                 </a>
                                 @if ($payment->status === 'waiting_verification')
                                     <form action="{{ route('payments.verify', $payment) }}" method="POST"
-                                          onsubmit="return confirm('Verifikasi pembayaran #{{ $payment->id }}?');" class="flex-1">
+                                          onsubmit="return confirm('Verifikasi pembayaran #{{ $payment->id }}?');">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit"
-                                                class="w-full px-3 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                                                class="w-full inline-flex items-center justify-center px-3 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
                                             Verifikasi
                                         </button>
                                     </form>
                                     <form action="{{ route('payments.reject', $payment) }}" method="POST"
-                                          onsubmit="const reason = prompt('Masukkan alasan penolakan untuk pembayaran #{{ $payment->id }}:'); if (!reason) return false; this.querySelector('input[name=reason]').value = reason; return true;" class="flex-1">
+                                          onsubmit="const reason = prompt('Masukkan alasan penolakan untuk pembayaran #{{ $payment->id }}:'); if (!reason) return false; this.querySelector('input[name=reason]').value = reason; return true;">
                                         @csrf
                                         @method('PATCH')
                                         <input type="hidden" name="reason" value="">
                                         <button type="submit"
-                                                class="w-full px-3 py-2 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+                                                class="w-full inline-flex items-center justify-center px-3 py-2.5 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
                                             Tolak
                                         </button>
                                     </form>

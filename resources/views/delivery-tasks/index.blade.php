@@ -26,8 +26,9 @@
             @endif
 
             <div class="mc-card p-0 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                {{-- Desktop & Tablet Table --}}
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr class="bg-mc-sidebar text-mc-muted text-xs uppercase tracking-wider border-b border-mc-border">
                                 <th class="px-6 py-4 font-semibold">Tugas & Booking</th>
@@ -90,8 +91,8 @@
                                     <td class="px-6 py-4 align-top text-center">
                                         <span class="badge {{ $badgeClass }}">{{ $task->status_label }}</span>
                                     </td>
-                                    <td class="px-6 py-4 align-top text-right space-y-2">
-                                        <a href="{{ route('delivery-tasks.show', $task) }}" class="btn-secondary text-xs px-3 py-1.5 inline-flex">
+                                    <td class="px-6 py-4 align-top text-right">
+                                        <a href="{{ route('delivery-tasks.show', $task) }}" class="btn-secondary text-xs px-3.5 py-2 inline-flex items-center justify-center">
                                             Detail &rarr;
                                         </a>
                                     </td>
@@ -110,6 +111,62 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                {{-- Mobile Cards --}}
+                <div class="md:hidden divide-y divide-mc-border/60">
+                    @forelse ($tasks as $task)
+                        @php
+                            $badgeClass = match($task->status) {
+                                'pending'     => 'badge-yellow',
+                                'assigned'    => 'badge-blue',
+                                'in_progress' => 'badge-amber',
+                                'completed'   => 'badge-green',
+                                'cancelled'   => 'badge-red',
+                                default       => 'badge-gray',
+                            };
+                        @endphp
+                        <div class="p-4 space-y-3">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <span class="font-bold text-white text-sm block">
+                                        {{ $task->type === 'pickup' ? '🛵 Penjemputan' : '📦 Pengantaran' }}
+                                    </span>
+                                    <span class="text-xs text-mc-orange font-mono">
+                                        #{{ $task->booking->nomor_booking }}
+                                    </span>
+                                </div>
+                                <span class="badge {{ $badgeClass }} flex-shrink-0">{{ $task->status_label }}</span>
+                            </div>
+                            <div class="text-xs text-mc-muted">
+                                <p><strong class="text-mc-text">Alamat:</strong> {{ $task->address }}</p>
+                                <p class="mt-1"><strong class="text-mc-text">Kendaraan:</strong> {{ $task->booking->vehicle->nomor_polisi ?? '-' }}</p>
+                            </div>
+                            <div class="flex items-center justify-between text-xs pt-1 border-t border-mc-border/40">
+                                <div>
+                                    <span class="text-mc-text font-semibold">{{ $task->distance_km }} km</span> &middot;
+                                    <span class="text-emerald-400 font-bold">Rp{{ number_format($task->delivery_fee, 0, ',', '.') }}</span>
+                                </div>
+                                @if ($task->courier)
+                                    <span class="text-xs text-mc-text font-medium">Kurir: {{ $task->courier->name }}</span>
+                                @else
+                                    <span class="text-xs text-mc-muted italic">Belum ditugaskan</span>
+                                @endif
+                            </div>
+                            <div class="pt-2">
+                                <a href="{{ route('delivery-tasks.show', $task) }}" class="btn-secondary text-xs px-4 py-2.5 w-full inline-flex items-center justify-center">
+                                    Detail Tugas &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-8 text-center text-mc-muted">
+                            <svg class="w-10 h-10 text-mc-muted/50 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 1m0 0h10m-10 0l2-1m8 1V6a1 1 0 00-1-1h-2"/>
+                            </svg>
+                            <span class="text-sm">Tidak ada delivery task yang ditemukan.</span>
+                        </div>
+                    @endforelse
                 </div>
                 
                 @if($tasks->hasPages())
