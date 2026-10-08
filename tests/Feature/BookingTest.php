@@ -207,4 +207,62 @@ class BookingTest extends TestCase
             'status' => 'assigned',
         ]);
     }
+
+    public function test_auto_assign_mechanic_memilih_mekanik_beban_terendah(): void
+    {
+        [$customer, $vehicle] = $this->makeCustomerWithVehicle();
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
+        // Mekanik 1 punya 1 active job
+        $mechanic1 = User::factory()->create(['role' => 'mechanic', 'is_active' => true, 'specialization' => 'mekanik_4_tak']);
+        $b1 = Booking::create([
+            'nomor_booking' => Booking::generateNomorBooking(),
+            'customer_id' => $customer->id, 'vehicle_id' => $vehicle->id,
+            'tanggal' => now()->addDay(), 'waktu' => '09:00', 'keluhan' => 'Cek mesin', 'jenis_layanan' => 'perbaikan',
+            'status' => 'assigned',
+        ]);
+        \App\Models\ServiceOrder::create([
+            'booking_id' => $b1->id, 'mechanic_id' => $mechanic1->id, 'status' => 'in_progress',
+        ]);
+
+        // Mekanik 2 punya 0 active jobs
+        $mechanic2 = User::factory()->create(['role' => 'mechanic', 'is_active' => true, 'specialization' => 'mekanik_4_tak']);
+
+        $booking = Booking::create([
+            'nomor_booking' => Booking::generateNomorBooking(),
+            'customer_id' => $customer->id, 'vehicle_id' => $vehicle->id,
+            'tanggal' => now()->addDay(), 'waktu' => '10:00', 'keluhan' => 'Servis berkala', 'jenis_layanan' => 'perbaikan',
+            'status' => 'waiting_service',
+        ]);
+
+        $bookingService = app(\App\Services\BookingService::class);
+        $assigned = $bookingService->assignMechanic($booking);
+
+        $this->assertTrue($assigned);
+        $this->assertDatabaseHas('service_orders', [
+            'booking_id' => $booking->id,
+            'mechanic_id' => $mechanic2->id,
+        ]);
+    }
+
+    public function test_assign_mechanic_tidak_membuat_duplikat_service_order(): void
+    {
+        [$customer, $vehicle] = $this->makeCustomerWithVehicle();
+        $mechanic = User::factory()->create(['role' => 'mechanic', 'is_active' => true, 'specialization' => 'mekanik_4_tak']);
+
+        $booking = Booking::create([
+            'nomor_booking' => Booking::generateNomorBooking(),
+            'customer_id' => $customer->id, 'vehicle_id' => $vehicle->id,
+            'tanggal' => now()->addDay(), 'waktu' => '10:00', 'keluhan' => 'Servis berkala', 'jenis_layanan' => 'perbaikan',
+            'status' => 'waiting_service',
+        ]);
+
+        $bookingService = app(\App\Services\BookingService::class);
+        $first = $bookingService->assignMechanic($booking);
+        $second = $bookingService->assignMechanic($booking);
+
+        $this->assertTrue($first);
+        $this->assertFalse($second);
+        $this->assertEquals(1, \App\Models\ServiceOrder::where('booking_id', $booking->id)->count());
+    }
 }

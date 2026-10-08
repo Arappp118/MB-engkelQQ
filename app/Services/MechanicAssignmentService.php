@@ -57,6 +57,7 @@ class MechanicAssignmentService
                 $q->whereIn('status', ['pending', 'in_progress']);
             }])
             ->orderBy('active_jobs', 'asc')
+            ->lockForUpdate()
             ->first();
     }
 
@@ -68,6 +69,7 @@ class MechanicAssignmentService
                 $q->whereIn('status', ['pending', 'in_progress']);
             }])
             ->orderBy('active_jobs', 'asc')
+            ->lockForUpdate()
             ->first();
     }
 }

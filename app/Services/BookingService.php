@@ -67,96 +67,107 @@ class BookingService
     public function confirm(Booking $booking): Booking
     {
         return DB::transaction(function () use ($booking) {
-            $this->transitionStatus($booking, 'confirmed');
+            $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+            $this->transitionStatus($lockedBooking, 'confirmed');
             
-            $isPickup = (bool) $booking->pickup_requested;
+            $isPickup = (bool) $lockedBooking->pickup_requested;
             
             if ($isPickup) {
-                $this->transitionStatus($booking, 'waiting_pickup');
+                $this->transitionStatus($lockedBooking, 'waiting_pickup');
                 // STOP here, do not assign mechanic yet for pickup
             } else {
-                $this->transitionStatus($booking, 'waiting_service');
+                $this->transitionStatus($lockedBooking, 'waiting_service');
                 // Auto-assign mechanic for non-pickup
-                $this->assignMechanic($booking);
+                $this->assignMechanic($lockedBooking);
             }
 
             $this->notificationService->notify(
-                $booking->customer,
+                $lockedBooking->customer,
                 'Booking Dikonfirmasi',
-                "Booking #{$booking->nomor_booking} telah dikonfirmasi.",
+                "Booking #{$lockedBooking->nomor_booking} telah dikonfirmasi.",
                 'booking',
                 'Booking',
-                $booking->id
+                $lockedBooking->id
             );
 
-            return $booking->fresh();
+            return $lockedBooking->fresh();
         });
     }
 
     public function arriveAtWorkshop(Booking $booking): Booking
     {
         return DB::transaction(function () use ($booking) {
-            $this->transitionStatus($booking, 'waiting_service');
-            $this->assignMechanic($booking);
-            return $booking->fresh();
+            $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+            $this->transitionStatus($lockedBooking, 'waiting_service');
+            $this->assignMechanic($lockedBooking);
+            return $lockedBooking->fresh();
         });
     }
 
     public function assignMechanic(Booking $booking): bool
     {
-        if ($booking->status !== 'waiting_service') {
+        return DB::transaction(function () use ($booking) {
+            $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedBooking->status !== 'waiting_service') {
+                return false;
+            }
+
+            if ($lockedBooking->serviceOrder()->exists()) {
+                return false;
+            }
+
+            $mechanic = $this->mechanicAssignment->assign($lockedBooking);
+            if ($mechanic) {
+                ServiceOrder::create([
+                    'booking_id'  => $lockedBooking->id,
+                    'mechanic_id' => $mechanic->id,
+                    'status'      => 'pending',
+                ]);
+                $this->transitionStatus($lockedBooking, 'assigned');
+
+                AuditLog::record('mechanic.assigned', 'booking', $lockedBooking->id, [
+                    'mechanic_id' => $mechanic->id,
+                ]);
+
+                $this->notificationService->notify(
+                    $mechanic,
+                    'Pekerjaan Baru',
+                    "Pekerjaan baru: Booking #{$lockedBooking->nomor_booking}",
+                    'job',
+                    'Booking',
+                    $lockedBooking->id
+                );
+                return true;
+            }
             return false;
-        }
-
-        $mechanic = $this->mechanicAssignment->assign($booking);
-        if ($mechanic) {
-            ServiceOrder::create([
-                'booking_id'  => $booking->id,
-                'mechanic_id' => $mechanic->id,
-                'status'      => 'pending',
-            ]);
-            $this->transitionStatus($booking, 'assigned');
-
-            AuditLog::record('mechanic.assigned', 'booking', $booking->id, [
-                'mechanic_id' => $mechanic->id,
-            ]);
-
-            $this->notificationService->notify(
-                $mechanic,
-                'Pekerjaan Baru',
-                "Pekerjaan baru: Booking #{$booking->nomor_booking}",
-                'job',
-                'Booking',
-                $booking->id
-            );
-            return true;
-        }
-        return false;
+        });
     }
 
     public function cancel(Booking $booking, string $reason = ''): Booking
     {
         return DB::transaction(function () use ($booking, $reason) {
-            if (!$booking->canTransitionTo('cancelled')) {
+            $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
+            if (!$lockedBooking->canTransitionTo('cancelled')) {
                 throw new \RuntimeException('Booking tidak dapat dibatalkan pada status ini.');
             }
-            $booking->update([
+            $lockedBooking->update([
                 'status'              => 'cancelled',
                 'cancellation_reason' => $reason,
             ]);
 
-            AuditLog::record('booking.cancelled', 'booking', $booking->id, ['reason' => $reason]);
+            AuditLog::record('booking.cancelled', 'booking', $lockedBooking->id, ['reason' => $reason]);
 
             $this->notificationService->notify(
-                $booking->customer,
+                $lockedBooking->customer,
                 'Booking Dibatalkan',
-                "Booking #{$booking->nomor_booking} telah dibatalkan.",
+                "Booking #{$lockedBooking->nomor_booking} telah dibatalkan.",
                 'booking',
                 'Booking',
-                $booking->id
+                $lockedBooking->id
             );
 
-            return $booking->fresh();
+            return $lockedBooking->fresh();
         });
     }
 

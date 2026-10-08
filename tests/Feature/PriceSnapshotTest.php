@@ -209,4 +209,84 @@ class PriceSnapshotTest extends TestCase
         $this->assertEquals(300000, $order->subtotal);
         $this->assertEquals(300000, $order->grand_total);
     }
+
+    public function test_9_sparepart_dengan_stok_cukup_berhasil_dan_stok_berkurang(): void
+    {
+        [$mechanic, $order] = $this->makeOrder();
+        $sparepart = ServiceItem::create([
+            'category' => 'sparepart', 'name' => 'Busi NGK', 'price' => 35000,
+            'unit' => 'pcs', 'is_sparepart' => true, 'stock' => 10, 'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($mechanic)->post("/service-orders/{$order->id}/items", [
+            'service_item_id' => $sparepart->id,
+            'quantity' => 3,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $sparepart->refresh();
+        $this->assertEquals(7, $sparepart->stock);
+
+        $this->assertDatabaseHas('service_order_items', [
+            'service_order_id'   => $order->id,
+            'service_item_id'    => $sparepart->id,
+            'item_name_snapshot' => 'Busi NGK',
+            'price_snapshot'     => 35000,
+            'quantity'           => 3,
+            'subtotal'           => 105000,
+        ]);
+    }
+
+    public function test_10_sparepart_dengan_stok_tidak_cukup_ditolak_dan_stok_tidak_berkurang(): void
+    {
+        [$mechanic, $order] = $this->makeOrder();
+        $sparepart = ServiceItem::create([
+            'category' => 'sparepart', 'name' => 'Kampas Rem', 'price' => 50000,
+            'unit' => 'set', 'is_sparepart' => true, 'stock' => 2, 'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($mechanic)->post("/service-orders/{$order->id}/items", [
+            'service_item_id' => $sparepart->id,
+            'quantity' => 5,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+
+        $sparepart->refresh();
+        $this->assertEquals(2, $sparepart->stock);
+
+        $this->assertDatabaseMissing('service_order_items', [
+            'service_order_id' => $order->id,
+            'service_item_id'  => $sparepart->id,
+        ]);
+    }
+
+    public function test_11_item_snapshot_nama_dan_harga_selalu_terisi_lengkap_dan_subtotal_atomik(): void
+    {
+        [$mechanic, $order] = $this->makeOrder();
+        $sparepart = ServiceItem::create([
+            'category' => 'sparepart', 'name' => 'Filter Udara', 'price' => 45000,
+            'unit' => 'pcs', 'is_sparepart' => true, 'stock' => 5, 'is_active' => true,
+        ]);
+
+        $this->actingAs($mechanic)->post("/service-orders/{$order->id}/items", [
+            'service_item_id' => $sparepart->id,
+            'quantity' => 2,
+        ]);
+
+        $orderItem = ServiceOrderItem::where('service_order_id', $order->id)->first();
+        $this->assertNotNull($orderItem);
+        $this->assertNotEmpty($orderItem->item_name_snapshot);
+        $this->assertEquals('Filter Udara', $orderItem->item_name_snapshot);
+        $this->assertEquals(45000, $orderItem->price_snapshot);
+        $this->assertEquals(2, $orderItem->quantity);
+        $this->assertEquals(90000, $orderItem->subtotal);
+
+        $order->refresh();
+        $this->assertEquals(90000, $order->subtotal);
+        $this->assertEquals(90000, $order->grand_total);
+    }
 }

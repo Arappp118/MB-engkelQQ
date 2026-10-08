@@ -22,12 +22,12 @@ class ServiceOrderService
     public function addItem(ServiceOrder $order, int $serviceItemId, int $quantity): ServiceOrderItem
     {
         return DB::transaction(function () use ($order, $serviceItemId, $quantity) {
-            // ALWAYS fetch price from DB — never trust frontend
-            $item = ServiceItem::active()->findOrFail($serviceItemId);
+            // ALWAYS fetch price from DB with lockForUpdate to prevent race condition on stock
+            $item = ServiceItem::active()->where('id', $serviceItemId)->lockForUpdate()->firstOrFail();
 
             // Check stock for spareparts
-            if ($item->is_sparepart && $item->stock !== null && $item->stock < $quantity) {
-                throw new \RuntimeException("Stok {$item->name} tidak mencukupi. Tersedia: {$item->stock}");
+            if ($item->is_sparepart && ($item->stock === null || $item->stock < $quantity)) {
+                throw new \RuntimeException("Stok {$item->name} tidak mencukupi. Tersedia: " . ($item->stock ?? 0));
             }
 
             $subtotal = $item->price * $quantity;
@@ -47,7 +47,8 @@ class ServiceOrderService
             }
 
             // Recalculate totals
-            $order->recalculate();
+            $lockedOrder = ServiceOrder::where('id', $order->id)->lockForUpdate()->first() ?? $order;
+            $lockedOrder->recalculate();
 
             AuditLog::record('service_order.item_added', 'ServiceOrder', $order->id, [
                 'item_id'  => $serviceItemId,
@@ -63,13 +64,16 @@ class ServiceOrderService
     {
         DB::transaction(function () use ($order, $item) {
             // Restore stock
-            $serviceItem = $item->serviceItem;
-            if ($serviceItem && $serviceItem->is_sparepart && $serviceItem->stock !== null) {
-                $serviceItem->increment('stock', $item->quantity);
+            if ($item->service_item_id) {
+                $serviceItem = ServiceItem::where('id', $item->service_item_id)->lockForUpdate()->first();
+                if ($serviceItem && $serviceItem->is_sparepart && $serviceItem->stock !== null) {
+                    $serviceItem->increment('stock', $item->quantity);
+                }
             }
 
             $item->delete();
-            $order->recalculate();
+            $lockedOrder = ServiceOrder::where('id', $order->id)->lockForUpdate()->first() ?? $order;
+            $lockedOrder->recalculate();
         });
     }
 
