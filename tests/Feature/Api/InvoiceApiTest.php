@@ -126,4 +126,152 @@ class InvoiceApiTest extends TestCase
 
         $response->assertJsonPath('data.grand_total', 110000);
     }
+
+    public function test_index_mengembalikan_invoice_order_completed(): void
+    {
+        [$customer, $order] = $this->makeOrder(100000, 10000);
+        $token = $customer->createToken('t')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/invoices');
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data' => [
+                '*' => [
+                    'invoice_number',
+                    'service_order_id',
+                    'grand_total',
+                ],
+            ],
+        ]);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Daftar invoice',
+        ]);
+        $this->assertCount(1, $response->json('data'));
+        $this->assertEquals($order->id, $response->json('data.0.service_order_id'));
+        $this->assertEquals($order->generateInvoiceNumber(), $response->json('data.0.invoice_number'));
+        $this->assertEquals(110000, $response->json('data.0.grand_total'));
+    }
+
+    public function test_index_tetap_menemukan_invoice_meski_ada_lebih_dari_15_order_non_completed_terbaru(): void
+    {
+        [$customer, $completedOrder] = $this->makeOrder(100000, 10000);
+        $token = $customer->createToken('t')->plainTextToken;
+
+        $vehicle = $completedOrder->booking->vehicle;
+
+        for ($i = 0; $i < 16; $i++) {
+            $booking = Booking::create([
+                'nomor_booking' => Booking::generateNomorBooking(),
+                'customer_id'   => $customer->id,
+                'vehicle_id'    => $vehicle->id,
+                'tanggal'       => now()->addDays($i + 1),
+                'waktu'         => '10:00',
+                'keluhan'       => "Keluhan {$i}",
+                'jenis_layanan' => 'perbaikan',
+                'status'        => 'in_service',
+            ]);
+            ServiceOrder::create([
+                'booking_id'   => $booking->id,
+                'mechanic_id'  => $completedOrder->mechanic_id,
+                'status'       => $i % 2 === 0 ? 'pending' : 'in_progress',
+                'delivery_fee' => 0,
+            ]);
+        }
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/invoices');
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('data'));
+        $this->assertEquals($completedOrder->id, $response->json('data.0.service_order_id'));
+    }
+
+    public function test_index_hanya_tampilkan_order_completed(): void
+    {
+        [$customer, $completedOrder] = $this->makeOrder(100000, 10000);
+        $token = $customer->createToken('t')->plainTextToken;
+
+        $vehicle = $completedOrder->booking->vehicle;
+
+        foreach (['pending', 'in_progress', 'cancelled'] as $status) {
+            $booking = Booking::create([
+                'nomor_booking' => Booking::generateNomorBooking(),
+                'customer_id'   => $customer->id,
+                'vehicle_id'    => $vehicle->id,
+                'tanggal'       => now()->addDay(),
+                'waktu'         => '10:00',
+                'keluhan'       => 'test',
+                'jenis_layanan' => 'perbaikan',
+                'status'        => 'assigned',
+            ]);
+            ServiceOrder::create([
+                'booking_id'   => $booking->id,
+                'mechanic_id'  => $completedOrder->mechanic_id,
+                'status'       => $status,
+                'delivery_fee' => 0,
+            ]);
+        }
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/invoices');
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('data'));
+        $this->assertEquals($completedOrder->id, $response->json('data.0.service_order_id'));
+    }
+
+    public function test_index_customer_tidak_dapat_melihat_invoice_customer_lain(): void
+    {
+        [$customerA, $orderA] = $this->makeOrder(100000, 10000);
+        [$customerB, $orderB] = $this->makeOrder(200000, 15000);
+
+        $tokenA = $customerA->createToken('t')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$tokenA}")
+            ->getJson('/api/v1/invoices');
+
+        $response->assertOk();
+        $orderIds = collect($response->json('data'))->pluck('service_order_id')->all();
+        $this->assertContains($orderA->id, $orderIds);
+        $this->assertNotContains($orderB->id, $orderIds);
+    }
+
+    public function test_index_admin_dapat_melihat_semua_invoice(): void
+    {
+        [$customerA, $orderA] = $this->makeOrder(100000, 10000);
+        [$customerB, $orderB] = $this->makeOrder(200000, 15000);
+
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $adminToken = $admin->createToken('t')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->getJson('/api/v1/invoices');
+
+        $response->assertOk();
+        $orderIds = collect($response->json('data'))->pluck('service_order_id')->all();
+        $this->assertContains($orderA->id, $orderIds);
+        $this->assertContains($orderB->id, $orderIds);
+    }
+
+    public function test_index_mekanik_hanya_melihat_invoice_order_miliknya(): void
+    {
+        [$customerA, $orderA] = $this->makeOrder(100000, 10000);
+        [$customerB, $orderB] = $this->makeOrder(200000, 15000);
+
+        $mechanicA = $orderA->mechanic;
+        $mechanicToken = $mechanicA->createToken('t')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$mechanicToken}")
+            ->getJson('/api/v1/invoices');
+
+        $response->assertOk();
+        $orderIds = collect($response->json('data'))->pluck('service_order_id')->all();
+        $this->assertContains($orderA->id, $orderIds);
+        $this->assertNotContains($orderB->id, $orderIds);
+    }
 }

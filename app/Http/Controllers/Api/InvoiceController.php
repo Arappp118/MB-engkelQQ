@@ -22,8 +22,16 @@ class InvoiceController extends Controller
      */
     public function index(): JsonResponse
     {
-        $orders = $this->serviceOrderService->listFor(auth()->user())
-            ->where('status', 'completed');
+        $user = auth()->user();
+        $query = ServiceOrder::where('status', 'completed');
+
+        if ($user->isMechanic()) {
+            $query->where('mechanic_id', $user->id);
+        } elseif (!$user->isAdmin()) {
+            $query->whereHas('booking', fn ($q) => $q->where('customer_id', $user->id));
+        }
+
+        $orders = $query->latest()->get();
 
         $summary = $orders->map(fn (ServiceOrder $order) => [
             'invoice_number' => $order->generateInvoiceNumber(),

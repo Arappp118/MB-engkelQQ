@@ -40,6 +40,7 @@ Route::prefix('v1')->group(function () {
         Route::post('service-orders/{service_order}/start', [ServiceOrderController::class, 'start'])->name('api.service-orders.start');
         Route::post('service-orders/{service_order}/diagnosis', [ServiceOrderController::class, 'diagnosis'])->name('api.service-orders.diagnosis');
         Route::post('service-orders/{service_order}/complete', [ServiceOrderController::class, 'complete'])->name('api.service-orders.complete');
+        Route::post('service-orders/{service_order}/items', [ServiceOrderController::class, 'addItem'])->name('api.service-orders.items.store');
 
         Route::apiResource('service-items', ServiceItemController::class)->names('api.service-items');
         Route::patch('service-items/{service_item}/stock', [ServiceItemController::class, 'updateStock'])->name('api.service-items.stock');

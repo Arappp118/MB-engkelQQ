@@ -22,6 +22,12 @@ class ServiceOrderService
     public function addItem(ServiceOrder $order, int $serviceItemId, int $quantity): ServiceOrderItem
     {
         return DB::transaction(function () use ($order, $serviceItemId, $quantity) {
+            $lockedOrder = ServiceOrder::where('id', $order->id)->lockForUpdate()->firstOrFail();
+
+            if (in_array($lockedOrder->status, ['completed', 'cancelled'])) {
+                throw new \RuntimeException("Tidak dapat menambah item pada service order berstatus '{$lockedOrder->status}'.");
+            }
+
             // ALWAYS fetch price from DB with lockForUpdate to prevent race condition on stock
             $item = ServiceItem::active()->where('id', $serviceItemId)->lockForUpdate()->firstOrFail();
 
@@ -33,7 +39,7 @@ class ServiceOrderService
             $subtotal = $item->price * $quantity;
 
             $orderItem = ServiceOrderItem::create([
-                'service_order_id'   => $order->id,
+                'service_order_id'   => $lockedOrder->id,
                 'service_item_id'    => $serviceItemId,
                 'item_name_snapshot' => $item->name,   // snapshot
                 'price_snapshot'     => $item->price,  // snapshot
@@ -47,10 +53,9 @@ class ServiceOrderService
             }
 
             // Recalculate totals
-            $lockedOrder = ServiceOrder::where('id', $order->id)->lockForUpdate()->first() ?? $order;
             $lockedOrder->recalculate();
 
-            AuditLog::record('service_order.item_added', 'ServiceOrder', $order->id, [
+            AuditLog::record('service_order.item_added', 'ServiceOrder', $lockedOrder->id, [
                 'item_id'  => $serviceItemId,
                 'quantity' => $quantity,
                 'price'    => $item->price,

@@ -289,4 +289,57 @@ class PriceSnapshotTest extends TestCase
         $this->assertEquals(90000, $order->subtotal);
         $this->assertEquals(90000, $order->grand_total);
     }
+
+    public function test_12_penambahan_item_pada_order_completed_ditolak(): void
+    {
+        [$mechanic, $order] = $this->makeOrder();
+        $order->update(['status' => 'completed']);
+        $sparepart = ServiceItem::create([
+            'category' => 'sparepart', 'name' => 'Busi Iridium', 'price' => 75000,
+            'unit' => 'pcs', 'is_sparepart' => true, 'stock' => 10, 'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($mechanic)->post("/service-orders/{$order->id}/items", [
+            'service_item_id' => $sparepart->id,
+            'quantity' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', "Tidak dapat menambah item pada service order berstatus 'completed'.");
+
+        $sparepart->refresh();
+        $this->assertEquals(10, $sparepart->stock);
+        $this->assertDatabaseMissing('service_order_items', [
+            'service_order_id' => $order->id,
+            'service_item_id'  => $sparepart->id,
+        ]);
+        $order->refresh();
+        $this->assertEquals(0, $order->subtotal);
+        $this->assertEquals(0, $order->grand_total);
+    }
+
+    public function test_13_penambahan_item_pada_order_cancelled_ditolak(): void
+    {
+        [$mechanic, $order] = $this->makeOrder();
+        $order->update(['status' => 'cancelled']);
+        $sparepart = ServiceItem::create([
+            'category' => 'sparepart', 'name' => 'Busi Standar', 'price' => 25000,
+            'unit' => 'pcs', 'is_sparepart' => true, 'stock' => 5, 'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($mechanic)->post("/service-orders/{$order->id}/items", [
+            'service_item_id' => $sparepart->id,
+            'quantity' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', "Tidak dapat menambah item pada service order berstatus 'cancelled'.");
+
+        $sparepart->refresh();
+        $this->assertEquals(5, $sparepart->stock);
+        $this->assertDatabaseMissing('service_order_items', [
+            'service_order_id' => $order->id,
+            'service_item_id'  => $sparepart->id,
+        ]);
+    }
 }

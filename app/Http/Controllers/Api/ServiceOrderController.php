@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\ServiceOrder\AddServiceOrderItemRequest;
 use App\Http\Requests\ServiceOrder\SaveDiagnosisRequest;
 use App\Http\Resources\ServiceOrderResource;
 use App\Models\ServiceOrder;
@@ -69,5 +70,25 @@ class ServiceOrderController extends Controller
         }
 
         return $this->success('Servis selesai', new ServiceOrderResource($serviceOrder->fresh()));
+    }
+
+    /**
+     * Tambah item ke service order via API.
+     * Menggunakan AddServiceOrderItemRequest & ServiceOrderService::addItem()
+     * yang sama dengan Web. Harga & nama SELALU diambil dari database.
+     */
+    public function addItem(AddServiceOrderItemRequest $request, ServiceOrder $serviceOrder): JsonResponse
+    {
+        try {
+            $this->serviceOrderService->addItem(
+                $serviceOrder,
+                $request->validated('service_item_id'),
+                $request->validated('quantity')
+            );
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), null, 422);
+        }
+
+        return $this->success('Item berhasil ditambahkan', new ServiceOrderResource($serviceOrder->fresh(['items'])), 201);
     }
 }
