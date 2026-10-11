@@ -15,6 +15,21 @@ class PaymentService
 
     public function create(ServiceOrder $order, array $data, ?UploadedFile $proof = null): Payment
     {
+        if ($order->status !== 'completed') {
+            throw new \RuntimeException("Pembayaran hanya dapat diajukan untuk service order yang sudah selesai (status saat ini: '{$order->status}').");
+        }
+
+        if ($order->grand_total <= 0) {
+            throw new \RuntimeException("Total tagihan servis tidak valid (grand total: 0).");
+        }
+
+        $hasActivePayment = Payment::where('service_order_id', $order->id)
+            ->whereIn('status', ['waiting_verification', 'verified'])
+            ->exists();
+        if ($hasActivePayment) {
+            throw new \RuntimeException("Pembayaran untuk order ini sudah diajukan atau diverifikasi.");
+        }
+
         return DB::transaction(function () use ($order, $data, $proof) {
             // BR-014: amount must match grand_total from DB
             $amount = $order->grand_total;
@@ -24,19 +39,19 @@ class PaymentService
                 $proofPath = $proof->store('payments/proofs', 'local');
             }
 
-            $status = $data['payment_method'] === 'cash' ? 'waiting_verification' : 'waiting_verification';
-
             $payment = Payment::create([
                 'service_order_id' => $order->id,
                 'payment_method'   => $data['payment_method'],
                 'amount'           => $amount,
                 'proof_path'       => $proofPath,
                 'paid_at'          => now(),
-                'status'           => $status,
+                'status'           => 'waiting_verification',
                 'notes'            => $data['notes'] ?? null,
             ]);
 
-            $order->booking->update(['status' => 'waiting_payment']);
+            if ($order->booking && $order->booking->canTransitionTo('waiting_payment')) {
+                $order->booking->update(['status' => 'waiting_payment']);
+            }
 
             AuditLog::record('payment.created', 'Payment', $payment->id, [
                 'amount' => $amount,
@@ -69,20 +84,34 @@ class PaymentService
 
     public function verify(Payment $payment, int $adminId): Payment
     {
-        if ($payment->status !== 'waiting_verification') {
-            throw new \RuntimeException("Tidak dapat verifikasi payment dari status '{$payment->status}'.");
-        }
-
         return DB::transaction(function () use ($payment, $adminId) {
-            $payment->update([
+            $lockedPayment = Payment::where('id', $payment->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedPayment->status !== 'waiting_verification') {
+                throw new \RuntimeException("Tidak dapat verifikasi payment dari status '{$lockedPayment->status}'.");
+            }
+
+            $lockedPayment->update([
                 'status'      => 'verified',
                 'verified_by' => $adminId,
                 'verified_at' => now(),
             ]);
 
-            $booking = $payment->serviceOrder->booking;
-            $booking->update(['status' => 'paid']);
-            $booking->update(['status' => 'completed']);
+            $booking = $lockedPayment->serviceOrder->booking;
+            if ($booking) {
+                if ($booking->canTransitionTo('waiting_payment')) {
+                    $booking->update(['status' => 'waiting_payment']);
+                }
+                if ($booking->canTransitionTo('paid')) {
+                    $booking->update(['status' => 'paid']);
+                }
+                if ($booking->canTransitionTo('completed')) {
+                    $booking->update(['status' => 'completed']);
+                }
+                if ($booking->status !== 'completed') {
+                    $booking->update(['status' => 'completed']);
+                }
+            }
 
             $this->notificationService->notify(
                 $booking->customer,
@@ -90,31 +119,35 @@ class PaymentService
                 "Pembayaran untuk booking #{$booking->nomor_booking} telah diverifikasi.",
                 'payment',
                 'Payment',
-                $payment->id
+                $lockedPayment->id
             );
 
-            AuditLog::record('payment.verified', 'Payment', $payment->id, ['admin_id' => $adminId]);
+            AuditLog::record('payment.verified', 'Payment', $lockedPayment->id, ['admin_id' => $adminId]);
 
-            return $payment->fresh();
+            return $lockedPayment->fresh();
         });
     }
 
     public function reject(Payment $payment, int $adminId, string $reason): Payment
     {
-        if ($payment->status !== 'waiting_verification') {
-            throw new \RuntimeException("Tidak dapat menolak payment dari status '{$payment->status}'.");
-        }
+        return DB::transaction(function () use ($payment, $adminId, $reason) {
+            $lockedPayment = Payment::where('id', $payment->id)->lockForUpdate()->firstOrFail();
 
-        $payment->update([
-            'status'      => 'rejected',
-            'verified_by' => $adminId,
-            'verified_at' => now(),
-            'notes'       => $reason,
-        ]);
+            if ($lockedPayment->status !== 'waiting_verification') {
+                throw new \RuntimeException("Tidak dapat menolak payment dari status '{$lockedPayment->status}'.");
+            }
 
-        AuditLog::record('payment.rejected', 'Payment', $payment->id, ['reason' => $reason]);
+            $lockedPayment->update([
+                'status'      => 'rejected',
+                'verified_by' => $adminId,
+                'verified_at' => now(),
+                'notes'       => $reason,
+            ]);
 
-        return $payment->fresh();
+            AuditLog::record('payment.rejected', 'Payment', $lockedPayment->id, ['reason' => $reason]);
+
+            return $lockedPayment->fresh();
+        });
     }
 
 }

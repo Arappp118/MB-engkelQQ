@@ -175,4 +175,80 @@ class PaymentApiTest extends TestCase
 
         $response->assertJsonMissingPath('data.proof_path');
     }
+
+    public function test_pembayaran_ditolak_jika_service_order_belum_completed(): void
+    {
+        [$customer, $order] = $this->makeOrder();
+        $order->update(['status' => 'in_progress']);
+        $token = $customer->createToken('t')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/service-orders/{$order->id}/payments", [
+                'payment_method' => 'cash',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['service_order']);
+    }
+
+    public function test_pembayaran_ditolak_jika_grand_total_nol(): void
+    {
+        [$customer, $order] = $this->makeOrder(0);
+        $order->update(['grand_total' => 0]);
+        $token = $customer->createToken('t')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/service-orders/{$order->id}/payments", [
+                'payment_method' => 'cash',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['service_order']);
+    }
+
+    public function test_pembayaran_ditolak_jika_sudah_ada_pembayaran_aktif(): void
+    {
+        [$customer, $order] = $this->makeOrder();
+        Payment::create([
+            'service_order_id' => $order->id,
+            'payment_method'   => 'transfer',
+            'amount'           => $order->grand_total,
+            'status'           => 'waiting_verification',
+        ]);
+        $token = $customer->createToken('t')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/service-orders/{$order->id}/payments", [
+                'payment_method' => 'cash',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['service_order']);
+    }
+
+    public function test_verifikasi_pembayaran_atomik_dan_menolak_eksekusi_ganda(): void
+    {
+        [, $order] = $this->makeOrder();
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $token = $admin->createToken('t')->plainTextToken;
+        $payment = Payment::create([
+            'service_order_id' => $order->id,
+            'payment_method'   => 'cash',
+            'amount'           => $order->grand_total,
+            'status'           => 'waiting_verification',
+        ]);
+
+        // Verifikasi pertama sukses
+        $res1 = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/payments/{$payment->id}/verify");
+        $res1->assertOk();
+
+        // Verifikasi kedua ditolak 422
+        $res2 = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/payments/{$payment->id}/verify");
+        $res2->assertStatus(422);
+
+        // Audit log verified hanya 1 kali
+        $this->assertEquals(1, \App\Models\AuditLog::where('action', 'payment.verified')->where('entity_id', $payment->id)->count());
+    }
 }

@@ -43,6 +43,11 @@ class ServiceOrder extends Model
         return $this->hasOne(Payment::class)->latestOfMany();
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     /**
      * Recalculate totals from items. Always called server-side.
      * NEVER trust amounts from frontend.

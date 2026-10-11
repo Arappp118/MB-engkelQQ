@@ -98,7 +98,9 @@ class BookingService
     {
         return DB::transaction(function () use ($booking) {
             $lockedBooking = Booking::where('id', $booking->id)->lockForUpdate()->firstOrFail();
-            $this->transitionStatus($lockedBooking, 'waiting_service');
+            if ($lockedBooking->status !== 'waiting_service') {
+                $this->transitionStatus($lockedBooking, 'waiting_service');
+            }
             $this->assignMechanic($lockedBooking);
             return $lockedBooking->fresh();
         });
@@ -155,6 +157,30 @@ class BookingService
                 'status'              => 'cancelled',
                 'cancellation_reason' => $reason,
             ]);
+
+            // Batalkan semua delivery task aktif yang terkait dengan booking ini
+            foreach ($lockedBooking->deliveryTasks()->whereNotIn('status', ['completed', 'cancelled'])->get() as $task) {
+                $task->update([
+                    'status' => 'cancelled',
+                    'notes'  => $reason ? "Dibatalkan bersama booking: {$reason}" : 'Dibatalkan bersama booking',
+                ]);
+
+                AuditLog::record('delivery_task.cancelled', 'delivery_task', $task->id, [
+                    'booking_id' => $lockedBooking->id,
+                    'reason'     => $reason,
+                ]);
+
+                if ($task->courier) {
+                    $this->notificationService->notify(
+                        $task->courier,
+                        'Tugas Dibatalkan',
+                        "Tugas untuk booking #{$lockedBooking->nomor_booking} telah dibatalkan.",
+                        'delivery_task',
+                        'DeliveryTask',
+                        $task->id
+                    );
+                }
+            }
 
             AuditLog::record('booking.cancelled', 'booking', $lockedBooking->id, ['reason' => $reason]);
 

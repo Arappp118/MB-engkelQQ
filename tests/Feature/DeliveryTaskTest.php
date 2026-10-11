@@ -223,7 +223,34 @@ class DeliveryTaskTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('delivery_tasks', ['id' => $task->id, 'status' => 'completed']);
         $booking->refresh();
-        $this->assertEquals('vehicle_picked_up', $booking->status);
+        $this->assertEquals('assigned', $booking->status);
+        $this->assertDatabaseHas('service_orders', [
+            'booking_id' => $booking->id,
+            'status'     => 'pending',
+        ]);
+        $this->assertNotNull($booking->serviceOrder);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'delivery.pickup_completed']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'mechanic.assigned']);
+    }
+
+    public function test_pickup_workflow_tanpa_mekanik_berstatus_waiting_service(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
+        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        [$booking, $task] = $this->makeBookingWithPickupTask($customer);
+
+        $this->actingAs($admin)->patch("/delivery-tasks/{$task->id}/assign", ['courier_id' => $courier->id]);
+        $this->actingAs($courier)->patch("/delivery-tasks/{$task->id}/start");
+        $response = $this->actingAs($courier)->patch("/delivery-tasks/{$task->id}/complete");
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('delivery_tasks', ['id' => $task->id, 'status' => 'completed']);
+        $booking->refresh();
+        $this->assertEquals('waiting_service', $booking->status);
+        $this->assertEquals(0, ServiceOrder::where('booking_id', $booking->id)->count());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'delivery.pickup_completed']);
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'mechanic.assigned']);
     }
 
     public function test_14_delivery_workflow_berhasil(): void

@@ -45,4 +45,30 @@ class StorePaymentRequest extends FormRequest
             'proof.max'          => 'Ukuran file maksimal 2MB.',
         ];
     }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $order = $this->route('service_order');
+            if (!$order instanceof \App\Models\ServiceOrder) {
+                return;
+            }
+
+            if ($order->status !== 'completed') {
+                $validator->errors()->add('service_order', 'Pembayaran hanya dapat diajukan setelah servis selesai.');
+            }
+
+            if ($order->grand_total <= 0) {
+                $validator->errors()->add('service_order', 'Total tagihan servis tidak valid untuk pembayaran.');
+            }
+
+            $hasActivePayment = $order->payments()
+                ->whereIn('status', ['waiting_verification', 'verified'])
+                ->exists();
+
+            if ($hasActivePayment) {
+                $validator->errors()->add('service_order', 'Pembayaran untuk order ini sudah diajukan atau sudah lunas.');
+            }
+        });
+    }
 }

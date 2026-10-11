@@ -274,4 +274,28 @@ class InvoiceApiTest extends TestCase
         $this->assertContains($orderA->id, $orderIds);
         $this->assertNotContains($orderB->id, $orderIds);
     }
+
+    public function test_index_dapat_menerima_parameter_per_page_dan_page(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $adminToken = $admin->createToken('t')->plainTextToken;
+
+        // Buat 3 orders completed
+        $this->makeOrder(100000);
+        $this->makeOrder(150000);
+        $this->makeOrder(200000);
+
+        $response = $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->getJson('/api/v1/invoices?per_page=2&page=1');
+
+        $response->assertOk();
+        $this->assertCount(2, $response->json('data'));
+        $this->assertIsArray($response->json('data'));
+
+        $responsePage2 = $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->getJson('/api/v1/invoices?per_page=2&page=2');
+
+        $responsePage2->assertOk();
+        $this->assertCount(1, $responsePage2->json('data'));
+    }
 }

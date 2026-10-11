@@ -30,7 +30,7 @@ class BookingPolicy
     {
         if ($user->isAdmin()) return true;
         return $user->isCustomer() && $booking->customer_id === $user->id
-            && in_array($booking->status, ['pending', 'confirmed']);
+            && in_array($booking->status, ['pending', 'confirmed', 'waiting_pickup']);
     }
 
     public function confirm(User $user, Booking $booking): bool

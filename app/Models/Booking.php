@@ -26,7 +26,7 @@ class Booking extends Model
     // Valid status transitions
     public const STATUS_TRANSITIONS = [
         'pending'              => ['confirmed', 'cancelled'],
-        'confirmed'            => ['waiting_pickup', 'waiting_service', 'cancelled'],
+        'confirmed'            => ['waiting_pickup', 'vehicle_picked_up', 'waiting_service', 'cancelled'],
         'waiting_pickup'       => ['vehicle_picked_up', 'cancelled'],
         'vehicle_picked_up'    => ['waiting_service'],
         'waiting_service'      => ['assigned'],

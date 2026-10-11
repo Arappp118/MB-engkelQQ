@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\Booking;
 use App\Models\DeliverySetting;
 use App\Models\DeliveryTask;
 use App\Models\User;
@@ -12,7 +13,8 @@ class DeliveryTaskService
 {
     public function __construct(
         private DeliveryFeeService $deliveryFeeService,
-        private \App\Services\NotificationService $notificationService
+        private \App\Services\NotificationService $notificationService,
+        private BookingService $bookingService,
     ) {
     }
 
@@ -74,7 +76,8 @@ class DeliveryTaskService
 
     /**
      * Selesaikan task. Update status Booking sesuai jenis task:
-     * pickup -> vehicle_picked_up, delivery -> completed.
+     * pickup -> otomatis proses penerimaan kendaraan di bengkel & alur servis reguler.
+     * delivery -> completed.
      */
     public function complete(DeliveryTask $task): DeliveryTask
     {
@@ -87,21 +90,39 @@ class DeliveryTaskService
         }
 
         return DB::transaction(function () use ($task) {
-            $task->update([
+            $lockedTask = DeliveryTask::where('id', $task->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedTask->status !== 'in_progress') {
+                throw new \RuntimeException("Tidak dapat menyelesaikan task dari status '{$lockedTask->status}'.");
+            }
+
+            if (is_null($lockedTask->courier_id)) {
+                throw new \RuntimeException("Task tidak dapat diselesaikan karena tidak memiliki kurir.");
+            }
+
+            $lockedTask->update([
                 'status'       => 'completed',
                 'completed_at' => now(),
             ]);
 
-            $booking = $task->booking;
+            $booking = Booking::where('id', $lockedTask->booking_id)->lockForUpdate()->firstOrFail();
 
-            if ($task->type === 'pickup') {
+            if ($lockedTask->type === 'pickup') {
+                if (!$booking->canTransitionTo('vehicle_picked_up')) {
+                    throw new \RuntimeException("Booking tidak dapat diubah ke status 'vehicle_picked_up' dari '{$booking->status}'.");
+                }
+
                 $booking->update(['status' => 'vehicle_picked_up']);
-                AuditLog::record('delivery.pickup_completed', 'delivery_task', $task->id, [
+
+                AuditLog::record('delivery.pickup_completed', 'delivery_task', $lockedTask->id, [
                     'booking_id' => $booking->id,
                 ]);
+
+                // Otomatisasi: Lanjutkan ke alur penerimaan kendaraan & servis reguler
+                $this->bookingService->arriveAtWorkshop($booking);
             } else {
                 $booking->update(['status' => 'completed']);
-                AuditLog::record('delivery.completed', 'delivery_task', $task->id, [
+                AuditLog::record('delivery.completed', 'delivery_task', $lockedTask->id, [
                     'booking_id' => $booking->id,
                 ]);
 
@@ -111,11 +132,11 @@ class DeliveryTaskService
                     "Kendaraan untuk booking #{$booking->nomor_booking} telah sampai.",
                     'delivery_task',
                     'DeliveryTask',
-                    $task->id
+                    $lockedTask->id
                 );
             }
 
-            return $task->fresh();
+            return $lockedTask->fresh();
         });
     }
 

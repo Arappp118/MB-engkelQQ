@@ -31,9 +31,10 @@ class InvoiceController extends Controller
             $query->whereHas('booking', fn ($q) => $q->where('customer_id', $user->id));
         }
 
-        $orders = $query->latest()->get();
+        $perPage = request()->integer('per_page', 50);
+        $paginator = $query->latest()->paginate($perPage);
 
-        $summary = $orders->map(fn (ServiceOrder $order) => [
+        $summary = $paginator->getCollection()->map(fn (ServiceOrder $order) => [
             'invoice_number' => $order->generateInvoiceNumber(),
             'service_order_id' => $order->id,
             'grand_total' => $order->grand_total,
