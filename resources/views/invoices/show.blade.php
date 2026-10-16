@@ -21,7 +21,7 @@
                         <p class="text-sm text-mc-muted print:text-gray-500 mt-1 font-mono">{{ $invoiceData['invoice_number'] }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-medium text-white print:text-gray-900">Tanggal: {{ \Carbon\Carbon::parse($invoiceData['tanggal'])->format('d/m/Y') }}</p>
+                        <p class="text-sm font-medium text-white print:text-gray-900">Tanggal: {{ $invoiceData['tanggal'] instanceof \DateTimeInterface ? $invoiceData['tanggal']->format('d/m/Y') : (\Carbon\Carbon::canBeCreatedFromFormat($invoiceData['tanggal'], 'd/m/Y') ? \Carbon\Carbon::createFromFormat('d/m/Y', $invoiceData['tanggal'])->format('d/m/Y') : \Carbon\Carbon::parse($invoiceData['tanggal'])->format('d/m/Y')) }}</p>
                         <p class="text-sm text-mc-muted print:text-gray-500">No. Booking: <span class="font-mono text-mc-orange print:text-gray-900">{{ $invoiceData['nomor_booking'] }}</span></p>
                     </div>
                 </div>
