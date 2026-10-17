@@ -21,7 +21,33 @@
                         <p class="text-sm text-mc-muted print:text-gray-500 mt-1 font-mono">{{ $invoiceData['invoice_number'] }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-medium text-white print:text-gray-900">Tanggal: {{ $invoiceData['tanggal'] instanceof \DateTimeInterface ? $invoiceData['tanggal']->format('d/m/Y') : (\Carbon\Carbon::canBeCreatedFromFormat($invoiceData['tanggal'], 'd/m/Y') ? \Carbon\Carbon::createFromFormat('d/m/Y', $invoiceData['tanggal'])->format('d/m/Y') : \Carbon\Carbon::parse($invoiceData['tanggal'])->format('d/m/Y')) }}</p>
+                        @php
+                            $rawDate = $invoiceData['tanggal'] ?? null;
+                            $formattedTanggal = '-';
+
+                            if ($rawDate instanceof \DateTimeInterface) {
+                                $formattedTanggal = $rawDate->format('d/m/Y');
+                            } elseif (is_string($rawDate) && filled($rawDate)) {
+                                $trimmed = trim($rawDate);
+                                if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $trimmed, $m)) {
+                                    $formattedTanggal = checkdate((int)$m[2], (int)$m[1], (int)$m[3])
+                                        ? sprintf('%02d/%02d/%04d', $m[1], $m[2], $m[3])
+                                        : '-';
+                                } elseif (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?(?:\.\d+)?(?:Z|[+-]\d{2}(?::?\d{2})?)?)?$/', $trimmed, $m)) {
+                                    if (checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
+                                        $validTime = true;
+                                        if (isset($m[4])) {
+                                            $h = (int)$m[4];
+                                            $i = (int)$m[5];
+                                            $s = isset($m[6]) ? (int)$m[6] : 0;
+                                            $validTime = ($h >= 0 && $h <= 23 && $i >= 0 && $i <= 59 && $s >= 0 && $s <= 59);
+                                        }
+                                        $formattedTanggal = $validTime ? sprintf('%02d/%02d/%04d', $m[3], $m[2], $m[1]) : '-';
+                                    }
+                                }
+                            }
+                        @endphp
+                        <p class="text-sm font-medium text-white print:text-gray-900">Tanggal: {{ $formattedTanggal }}</p>
                         <p class="text-sm text-mc-muted print:text-gray-500">No. Booking: <span class="font-mono text-mc-orange print:text-gray-900">{{ $invoiceData['nomor_booking'] }}</span></p>
                     </div>
                 </div>
