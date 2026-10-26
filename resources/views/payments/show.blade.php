@@ -82,9 +82,19 @@
                 @if ($payment->proof_path)
                     <div class="mt-4 pt-4 border-t border-mc-border">
                         <p class="text-sm text-mc-muted mb-1">Bukti Pembayaran</p>
-                        <p class="text-sm text-emerald-400 font-medium flex items-center gap-1">
-                            <span>&#10003;</span> Bukti telah diunggah
-                        </p>
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <p class="text-sm text-emerald-400 font-medium flex items-center gap-1">
+                                <span>&#10003;</span> Bukti telah diunggah
+                            </p>
+                            <a href="{{ route('payments.proof', $payment) }}" target="_blank"
+                                class="inline-flex items-center gap-1 text-xs text-mc-orange hover:text-mc-orange-hover hover:underline">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Lihat / Unduh Bukti
+                            </a>
+                        </div>
                     </div>
                 @elseif ($payment->payment_method !== 'cash')
                     <div class="mt-4 pt-4 border-t border-mc-border">

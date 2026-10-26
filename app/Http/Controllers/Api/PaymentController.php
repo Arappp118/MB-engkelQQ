@@ -12,9 +12,7 @@ use Illuminate\Http\JsonResponse;
 
 class PaymentController extends Controller
 {
-    public function __construct(protected PaymentService $paymentService)
-    {
-    }
+    public function __construct(protected PaymentService $paymentService) {}
 
     /**
      * Reuse StorePaymentRequest sama dengan Web — amount SELALU dari
@@ -22,7 +20,11 @@ class PaymentController extends Controller
      */
     public function store(StorePaymentRequest $request, ServiceOrder $serviceOrder): JsonResponse
     {
-        $payment = $this->paymentService->create($serviceOrder, $request->validated(), $request->file('proof'));
+        try {
+            $payment = $this->paymentService->create($serviceOrder, $request->validated(), $request->file('proof'));
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), null, 422);
+        }
 
         return $this->success('Pembayaran berhasil diajukan', new PaymentResource($payment), 201);
     }
@@ -36,7 +38,7 @@ class PaymentController extends Controller
 
     public function verify(Payment $payment): JsonResponse
     {
-        $this->authorize('verify', Payment::class);
+        $this->authorize('verify', $payment);
 
         try {
             $updated = $this->paymentService->verify($payment, auth()->id());
@@ -49,6 +51,8 @@ class PaymentController extends Controller
 
     public function reject(RejectPaymentRequest $request, Payment $payment): JsonResponse
     {
+        $this->authorize('reject', $payment);
+
         try {
             $updated = $this->paymentService->reject($payment, auth()->id(), $request->validated('reason'));
         } catch (\RuntimeException $e) {

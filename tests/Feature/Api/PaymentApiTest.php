@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\AuditLog;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\ServiceOrder;
@@ -20,7 +21,7 @@ class PaymentApiTest extends TestCase
         $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
         $mechanic = User::factory()->create(['role' => 'mechanic', 'is_active' => true]);
         $vehicle = Vehicle::create([
-            'user_id' => $customer->id, 'nomor_polisi' => 'B' . rand(1000, 9999) . 'PA',
+            'user_id' => $customer->id, 'nomor_polisi' => 'B'.rand(1000, 9999).'PA',
             'merk' => 'Honda', 'model' => 'Vario', 'tahun' => 2022,
             'tipe_mesin' => '4_tak', 'transmisi' => 'matic',
         ]);
@@ -211,9 +212,9 @@ class PaymentApiTest extends TestCase
         [$customer, $order] = $this->makeOrder();
         Payment::create([
             'service_order_id' => $order->id,
-            'payment_method'   => 'transfer',
-            'amount'           => $order->grand_total,
-            'status'           => 'waiting_verification',
+            'payment_method' => 'transfer',
+            'amount' => $order->grand_total,
+            'status' => 'waiting_verification',
         ]);
         $token = $customer->createToken('t')->plainTextToken;
 
@@ -233,9 +234,9 @@ class PaymentApiTest extends TestCase
         $token = $admin->createToken('t')->plainTextToken;
         $payment = Payment::create([
             'service_order_id' => $order->id,
-            'payment_method'   => 'cash',
-            'amount'           => $order->grand_total,
-            'status'           => 'waiting_verification',
+            'payment_method' => 'cash',
+            'amount' => $order->grand_total,
+            'status' => 'waiting_verification',
         ]);
 
         // Verifikasi pertama sukses
@@ -249,6 +250,104 @@ class PaymentApiTest extends TestCase
         $res2->assertStatus(422);
 
         // Audit log verified hanya 1 kali
-        $this->assertEquals(1, \App\Models\AuditLog::where('action', 'payment.verified')->where('entity_id', $payment->id)->count());
+        $this->assertEquals(1, AuditLog::where('action', 'payment.verified')->where('entity_id', $payment->id)->count());
+    }
+
+    public function test_paid_at_null_saat_submit_dan_terisi_saat_verify(): void
+    {
+        [$customer, $order] = $this->makeOrder();
+        $token = $customer->createToken('t')->plainTextToken;
+
+        $res = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/service-orders/{$order->id}/payments", ['payment_method' => 'cash']);
+
+        $res->assertStatus(201);
+        $res->assertJsonPath('data.paid_at', null);
+
+        $paymentId = $res->json('data.id');
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $adminToken = $admin->createToken('t')->plainTextToken;
+
+        $this->app['auth']->forgetGuards();
+
+        $verifyRes = $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->postJson("/api/v1/payments/{$paymentId}/verify");
+
+        $verifyRes->assertOk();
+        $this->assertNotNull($verifyRes->json('data.paid_at'));
+        $this->assertEquals('verified', $verifyRes->json('data.status'));
+    }
+
+    public function test_unauthorized_reject_ditolak_403(): void
+    {
+        [$customer, $order] = $this->makeOrder();
+        $token = $customer->createToken('t')->plainTextToken;
+        $payment = Payment::create([
+            'service_order_id' => $order->id,
+            'payment_method' => 'cash',
+            'amount' => $order->grand_total,
+            'status' => 'waiting_verification',
+        ]);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/payments/{$payment->id}/reject", ['reason' => 'invalid'])
+            ->assertStatus(403);
+    }
+
+    public function test_mechanic_dan_courier_tidak_dapat_melihat_detail_payment_di_api(): void
+    {
+        [$customer, $order] = $this->makeOrder();
+        $mechanic = User::factory()->create(['role' => 'mechanic', 'is_active' => true]);
+        $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
+        $payment = Payment::create([
+            'service_order_id' => $order->id,
+            'payment_method' => 'cash',
+            'amount' => $order->grand_total,
+            'status' => 'waiting_verification',
+        ]);
+
+        $mToken = $mechanic->createToken('t')->plainTextToken;
+        $cToken = $courier->createToken('t')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$mToken}")
+            ->getJson("/api/v1/payments/{$payment->id}")
+            ->assertStatus(403);
+
+        $this->withHeader('Authorization', "Bearer {$cToken}")
+            ->getJson("/api/v1/payments/{$payment->id}")
+            ->assertStatus(403);
+    }
+
+    public function test_customer_dapat_mengajukan_ulang_setelah_pembayaran_ditolak_di_api(): void
+    {
+        [$customer, $order] = $this->makeOrder();
+        $token = $customer->createToken('t')->plainTextToken;
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $adminToken = $admin->createToken('t')->plainTextToken;
+
+        $payment1 = Payment::create([
+            'service_order_id' => $order->id,
+            'payment_method' => 'transfer',
+            'amount' => $order->grand_total,
+            'status' => 'waiting_verification',
+        ]);
+
+        // Admin tolak pembayaran pertama
+        $this->withHeader('Authorization', "Bearer {$adminToken}")
+            ->postJson("/api/v1/payments/{$payment1->id}/reject", ['reason' => 'Bukti buram'])
+            ->assertOk();
+
+        $this->app['auth']->forgetGuards();
+
+        // Customer ajukan pembayaran baru
+        $res = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson("/api/v1/service-orders/{$order->id}/payments", [
+                'payment_method' => 'cash',
+                'notes' => 'Bayar tunai di kasir',
+            ]);
+
+        $res->assertStatus(201);
+        $this->assertEquals('waiting_verification', $res->json('data.status'));
+        $this->assertEquals(2, Payment::where('service_order_id', $order->id)->count());
     }
 }

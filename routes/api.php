@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PaymentSettingController;
 use App\Http\Controllers\Api\ServiceItemController;
 use App\Http\Controllers\Api\ServiceOrderController;
 use App\Http\Controllers\Api\BookingController;
@@ -58,6 +59,9 @@ Route::prefix('v1')->group(function () {
 
         Route::get('delivery-settings', [DeliverySettingController::class, 'show'])->name('api.delivery-settings.show');
         Route::put('delivery-settings', [DeliverySettingController::class, 'update'])->name('api.delivery-settings.update');
+
+        Route::get('payment-settings', [PaymentSettingController::class, 'show'])->name('api.payment-settings.show');
+        Route::put('payment-settings', [PaymentSettingController::class, 'update'])->name('api.payment-settings.update');
 
         Route::get('invoices', [InvoiceController::class, 'index'])->name('api.invoices.index');
         Route::get('invoices/{service_order}', [InvoiceController::class, 'show'])->name('api.invoices.show');

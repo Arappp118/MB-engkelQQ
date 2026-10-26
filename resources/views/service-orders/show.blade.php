@@ -397,38 +397,104 @@
                             <span class="text-xs text-mc-muted/70">(ditentukan oleh sistem)</span>
                         </p>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="payment_method" class="mc-label">Metode Pembayaran <span class="text-red-400">*</span></label>
-                                <select id="payment_method" name="payment_method" required class="mc-select">
-                                    <option value="" disabled {{ old('payment_method') ? '' : 'selected' }}>-- Pilih metode --</option>
-                                    <option value="cash" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Tunai (Cash)</option>
-                                    <option value="transfer" {{ old('payment_method') === 'transfer' ? 'selected' : '' }}>Transfer Bank</option>
-                                    <option value="qris" {{ old('payment_method') === 'qris' ? 'selected' : '' }}>QRIS</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('payment_method')" class="mt-1" />
+                        @php
+                            $activeBank = \App\Models\PaymentSetting::getActiveBank();
+                            $qrisConfig = \App\Models\PaymentSetting::getQrisConfig();
+                        @endphp
+
+                        <div x-data="{ method: '{{ old('payment_method', '') }}' }" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="payment_method" class="mc-label">Metode Pembayaran <span class="text-red-400">*</span></label>
+                                    <select id="payment_method" name="payment_method" x-model="method" required class="mc-select">
+                                        <option value="" disabled>-- Pilih metode --</option>
+                                        <option value="cash">Tunai (Cash)</option>
+                                        @if ($activeBank)
+                                            <option value="transfer">Transfer Bank ({{ $activeBank['bank_name'] }})</option>
+                                        @else
+                                            <option value="transfer">Transfer Bank</option>
+                                        @endif
+                                        @if ($qrisConfig)
+                                            <option value="qris">QRIS ({{ $qrisConfig['merchant_name'] }})</option>
+                                        @else
+                                            <option value="qris">QRIS</option>
+                                        @endif
+                                    </select>
+                                    <x-input-error :messages="$errors->get('payment_method')" class="mt-1" />
+                                </div>
+
+                                <div>
+                                    <label for="proof" class="mc-label">Bukti Pembayaran</label>
+                                    <input id="proof" name="proof" type="file"
+                                        accept=".jpg,.jpeg,.png,.pdf"
+                                        class="mc-input file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-mc-card file:text-mc-text hover:file:bg-mc-border">
+                                    <p class="text-xs text-mc-muted mt-1">Wajib untuk Transfer/QRIS (Maks 2MB, JPG/PNG/PDF).</p>
+                                    <x-input-error :messages="$errors->get('proof')" class="mt-1" />
+                                </div>
+                            </div>
+
+                            {{-- Instruksi Transfer Bank --}}
+                            <div x-show="method === 'transfer'" x-cloak class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs space-y-2">
+                                <p class="font-bold text-sm text-white flex items-center gap-2">
+                                    <span>&#128179;</span> Instruksi Transfer Bank Resmi Bengkel
+                                </p>
+                                @if ($activeBank)
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-mc-sidebar p-3 rounded-lg border border-mc-border text-mc-text">
+                                        <div>
+                                            <span class="text-mc-muted block text-[11px]">Bank:</span>
+                                            <strong class="text-white">{{ $activeBank['bank_name'] }}</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-mc-muted block text-[11px]">No. Rekening:</span>
+                                            <strong class="font-mono text-mc-orange text-sm">{{ $activeBank['account_number'] }}</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-mc-muted block text-[11px]">Atas Nama:</span>
+                                            <strong class="text-white">{{ $activeBank['account_name'] }}</strong>
+                                        </div>
+                                    </div>
+                                    <p class="text-mc-muted">Silakan transfer tepat sebesar <strong class="text-emerald-400">Rp{{ number_format($serviceOrder->grand_total ?? 0, 0, ',', '.') }}</strong>, lalu unggah struk/bukti transfer.</p>
+                                @else
+                                    <p class="text-amber-400">Rekening bank bengkel sedang dalam pemeliharaan. Silakan konfirmasi ke admin.</p>
+                                @endif
+                            </div>
+
+                            {{-- Instruksi QRIS --}}
+                            <div x-show="method === 'qris'" x-cloak class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs space-y-3">
+                                <p class="font-bold text-sm text-white flex items-center gap-2">
+                                    <span>&#9889;</span> Instruksi Pembayaran QRIS
+                                </p>
+                                @if ($qrisConfig)
+                                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-mc-sidebar p-3 rounded-lg border border-mc-border text-mc-text">
+                                        @if ($qrisConfig['image_path'])
+                                            <img src="{{ asset('storage/' . $qrisConfig['image_path']) }}" alt="QRIS" class="w-28 h-28 object-contain bg-white p-1 rounded border border-mc-border">
+                                        @endif
+                                        <div class="space-y-1">
+                                            <p class="text-xs text-mc-muted">Merchant: <strong class="text-white">{{ $qrisConfig['merchant_name'] }}</strong></p>
+                                            <p class="text-xs text-mc-muted">Nominal yang harus dibayar: <strong class="text-emerald-400 font-bold">Rp{{ number_format($serviceOrder->grand_total ?? 0, 0, ',', '.') }}</strong></p>
+                                            <p class="text-[11px] text-amber-300">* QRIS statis: Masukkan nominal tagihan secara manual pada aplikasi e-wallet / mobile banking Anda.</p>
+                                        </div>
+                                    </div>
+                                @endif
+                                <p class="text-mc-muted">Setelah pembayaran berhasil, simpan screenshot bukti transaksi dan unggah melalui form di atas.</p>
+                            </div>
+
+                            {{-- Instruksi Tunai --}}
+                            <div x-show="method === 'cash'" x-cloak class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                                <strong>Tunai di Bengkel:</strong> Lakukan pembayaran tunai langsung di kasir bengkel saat mengambil kendaraan atau menyelesaikan servis. Admin/kasir akan memverifikasi penerimaan uang.
                             </div>
 
                             <div>
-                                <label for="proof" class="mc-label">Bukti Pembayaran</label>
-                                <input id="proof" name="proof" type="file"
-                                    accept=".jpg,.jpeg,.png,.pdf"
-                                    class="mc-input file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-mc-card file:text-mc-text hover:file:bg-mc-border">
-                                <p class="text-xs text-mc-muted mt-1">Wajib untuk Transfer/QRIS (Maks 2MB).</p>
-                                <x-input-error :messages="$errors->get('proof')" class="mt-1" />
+                                <label for="pay_notes" class="mc-label">Catatan <span class="text-mc-muted text-xs">(opsional)</span></label>
+                                <input id="pay_notes" name="notes" type="text" maxlength="500"
+                                    value="{{ old('notes') }}" placeholder="Contoh: Titip di kasir / nomor referensi transfer"
+                                    class="mc-input">
                             </div>
-                        </div>
 
-                        <div>
-                            <label for="pay_notes" class="mc-label">Catatan <span class="text-mc-muted text-xs">(opsional)</span></label>
-                            <input id="pay_notes" name="notes" type="text" maxlength="500"
-                                value="{{ old('notes') }}" placeholder="Contoh: Titip di kasir / satpam"
-                                class="mc-input">
+                            <button type="submit" class="btn-primary">
+                                {{ $serviceOrder->payment && $serviceOrder->payment->status === 'rejected' ? 'Bayar Lagi' : 'Ajukan Pembayaran' }}
+                            </button>
                         </div>
-
-                        <button type="submit" class="btn-primary">
-                            {{ $serviceOrder->payment && $serviceOrder->payment->status === 'rejected' ? 'Bayar Lagi' : 'Ajukan Pembayaran' }}
-                        </button>
                     </form>
                 </div>
             @endif

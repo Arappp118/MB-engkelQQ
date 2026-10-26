@@ -99,6 +99,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         ->name('users.couriers.update');
     Route::patch('/users/couriers/{user}/toggle', [UserManagementController::class, 'toggleCourier'])
         ->name('users.couriers.toggle');
+
+    // Payment Settings
+    Route::get('/payment-settings', [\App\Http\Controllers\PaymentSettingController::class, 'show'])
+        ->name('payment-settings.show');
+    Route::patch('/payment-settings', [\App\Http\Controllers\PaymentSettingController::class, 'update'])
+        ->name('payment-settings.update');
 });
 
 // ── Mekanik ──────────────────────────────────────────────────────────────

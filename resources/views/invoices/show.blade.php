@@ -121,17 +121,17 @@
                 <div class="mt-10 border-t border-mc-border print:border-gray-200 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <h4 class="text-xs font-semibold text-mc-muted print:text-gray-500 uppercase tracking-wider mb-2">Status Pembayaran</h4>
-                        @if ($invoiceData['payment'] && $invoiceData['payment']->status === 'verified')
+                        @if ($invoiceData['payment'] && in_array($invoiceData['payment']->status, ['verified', 'paid']))
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold badge-green">
                                 LUNAS
                             </span>
-                        @elseif ($invoiceData['payment'] && $invoiceData['payment']->status === 'pending')
+                        @elseif ($invoiceData['payment'] && in_array($invoiceData['payment']->status, ['waiting_verification', 'pending']))
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold badge-yellow">
                                 MENUNGGU VERIFIKASI
                             </span>
-                        @elseif ($invoiceData['payment'] && $invoiceData['payment']->status === 'failed')
+                        @elseif ($invoiceData['payment'] && in_array($invoiceData['payment']->status, ['rejected', 'failed']))
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold badge-red">
-                                GAGAL / DITOLAK
+                                DITOLAK
                             </span>
                         @else
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold badge-gray">
@@ -150,6 +150,11 @@
                                     } }}
                                 </span>
                             </p>
+                            @if ($invoiceData['payment']->paid_at)
+                                <p class="text-xs text-mc-muted print:text-gray-600 mt-1">
+                                    Waktu Bayar: {{ $invoiceData['payment']->paid_at->format('d/m/Y H:i') }}
+                                </p>
+                            @endif
                         @endif
                     </div>
                     

@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\DeliveryTask;
 use App\Models\Payment;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PaymentTest extends TestCase
@@ -24,7 +24,7 @@ class PaymentTest extends TestCase
 
         $vehicle = Vehicle::create([
             'user_id' => $customer->id,
-            'nomor_polisi' => 'B' . rand(1000, 9999) . 'PY',
+            'nomor_polisi' => 'B'.rand(1000, 9999).'PY',
             'merk' => 'Honda', 'model' => 'Vario', 'tahun' => 2022,
             'tipe_mesin' => '4_tak', 'transmisi' => 'matic',
         ]);
@@ -279,5 +279,110 @@ class PaymentTest extends TestCase
         $response = $this->actingAs($randomUser)->patch("/payments/{$payment->id}/verify");
 
         $response->assertForbidden();
+    }
+
+    public function test_18_paid_at_null_saat_pembayaran_dibuat_dan_terisi_saat_verified(): void
+    {
+        [$customer, , $admin, $order] = $this->makeOrderWithTotal();
+
+        $this->actingAs($customer)->post("/service-orders/{$order->id}/payments", [
+            'payment_method' => 'cash',
+        ]);
+
+        $payment = Payment::where('service_order_id', $order->id)->firstOrFail();
+        $this->assertNull($payment->paid_at, 'paid_at tidak boleh diisi saat submit pembayaran');
+
+        $this->actingAs($admin)->patch("/payments/{$payment->id}/verify");
+
+        $payment->refresh();
+        $this->assertNotNull($payment->paid_at, 'paid_at harus terisi saat verifikasi berhasil');
+        $this->assertEquals('verified', $payment->status);
+    }
+
+    public function test_19_unauthorized_reject_menghasilkan_403(): void
+    {
+        [$customer, $mechanic, , $order] = $this->makeOrderWithTotal();
+        $payment = Payment::create([
+            'service_order_id' => $order->id, 'payment_method' => 'cash',
+            'amount' => $order->grand_total, 'status' => 'waiting_verification',
+        ]);
+
+        $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
+
+        $this->actingAs($customer)->patch("/payments/{$payment->id}/reject", ['reason' => 'test'])->assertForbidden();
+        $this->actingAs($mechanic)->patch("/payments/{$payment->id}/reject", ['reason' => 'test'])->assertForbidden();
+        $this->actingAs($courier)->patch("/payments/{$payment->id}/reject", ['reason' => 'test'])->assertForbidden();
+    }
+
+    public function test_20_customer_dapat_mengajukan_ulang_setelah_pembayaran_ditolak(): void
+    {
+        [$customer, , $admin, $order] = $this->makeOrderWithTotal();
+
+        $payment1 = Payment::create([
+            'service_order_id' => $order->id, 'payment_method' => 'cash',
+            'amount' => $order->grand_total, 'status' => 'waiting_verification',
+        ]);
+
+        $this->actingAs($admin)->patch("/payments/{$payment1->id}/reject", ['reason' => 'Bukti buram']);
+        $this->assertEquals('rejected', $payment1->fresh()->status);
+
+        // Customer mengajukan pembayaran ulang
+        $response = $this->actingAs($customer)->post("/service-orders/{$order->id}/payments", [
+            'payment_method' => 'cash',
+            'notes' => 'Pengajuan ulang dengan struk kasir',
+        ]);
+        $response->assertRedirect();
+
+        $this->assertEquals(2, Payment::where('service_order_id', $order->id)->count());
+        $payment2 = Payment::where('service_order_id', $order->id)->latest('id')->first();
+        $this->assertEquals('waiting_verification', $payment2->status);
+
+        // Admin memverifikasi pembayaran kedua
+        $this->actingAs($admin)->patch("/payments/{$payment2->id}/verify");
+        $this->assertEquals('verified', $payment2->fresh()->status);
+    }
+
+    public function test_21_booking_dengan_delivery_task_tidak_dipaksa_completed_saat_payment_verified(): void
+    {
+        [, , $admin, $order] = $this->makeOrderWithTotal();
+        $booking = $order->booking;
+
+        // Buat delivery task yang masih aktif
+        DeliveryTask::create([
+            'booking_id' => $booking->id,
+            'type' => 'delivery',
+            'address' => 'Jl. Test No. 123',
+            'distance_km' => 5,
+            'delivery_fee' => 10000,
+            'status' => 'pending',
+        ]);
+
+        $payment = Payment::create([
+            'service_order_id' => $order->id,
+            'payment_method' => 'cash',
+            'amount' => $order->grand_total,
+            'status' => 'waiting_verification',
+        ]);
+
+        $this->actingAs($admin)->patch("/payments/{$payment->id}/verify");
+
+        $booking->refresh();
+        $this->assertEquals('ready_for_delivery', $booking->status, 'Booking dengan delivery task aktif harus siap diantar, bukan dipaksa completed');
+    }
+
+    public function test_22_mechanic_dan_courier_tidak_dapat_melihat_detail_payment(): void
+    {
+        [, $mechanic, , $order] = $this->makeOrderWithTotal();
+        $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
+
+        $payment = Payment::create([
+            'service_order_id' => $order->id,
+            'payment_method' => 'cash',
+            'amount' => $order->grand_total,
+            'status' => 'waiting_verification',
+        ]);
+
+        $this->actingAs($mechanic)->get("/payments/{$payment->id}")->assertForbidden();
+        $this->actingAs($courier)->get("/payments/{$payment->id}")->assertForbidden();
     }
 }

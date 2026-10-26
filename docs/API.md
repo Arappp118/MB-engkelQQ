@@ -96,6 +96,14 @@ Harga (`price`) hanya bisa diubah admin lewat endpoint ini — tidak pernah dari
 
 `amount` selalu dari `service_order.grand_total` server, tidak pernah dari request. Proof upload: mimes jpg/jpeg/png/pdf, maks 2MB.
 
+## Payment Settings
+| Method | URL | Auth | Role |
+|---|---|---|---|
+| GET | `/payment-settings` | Sanctum | Semua (Customer hanya melihat instruksi aktif; Admin melihat konfigurasi lengkap) |
+| PUT | `/payment-settings` | Sanctum | Admin saja |
+
+Body update: `bank_name`, `bank_account_number`, `bank_account_holder`, `bank_is_active`, `qris_merchant_name`, `qris_image` (file upload opsional), `qris_is_active`.
+
 ## Delivery / Courier
 | Method | URL | Auth | Role |
 |---|---|---|---|

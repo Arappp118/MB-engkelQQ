@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Payment;
 
 use App\Models\Payment;
+use App\Models\ServiceOrder;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePaymentRequest extends FormRequest
@@ -16,7 +17,7 @@ class StorePaymentRequest extends FormRequest
     {
         $order = $this->route('service_order');
 
-        if (!$order || !$this->user()->can('create', Payment::class)) {
+        if (! $order || ! $this->user()->can('create', Payment::class)) {
             return false;
         }
 
@@ -41,8 +42,8 @@ class StorePaymentRequest extends FormRequest
     {
         return [
             'proof.required_if' => 'Bukti pembayaran wajib diunggah untuk transfer/QRIS.',
-            'proof.mimes'        => 'File harus berformat JPG, PNG, atau PDF.',
-            'proof.max'          => 'Ukuran file maksimal 2MB.',
+            'proof.mimes' => 'File harus berformat JPG, PNG, atau PDF.',
+            'proof.max' => 'Ukuran file maksimal 2MB.',
         ];
     }
 
@@ -50,7 +51,7 @@ class StorePaymentRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $order = $this->route('service_order');
-            if (!$order instanceof \App\Models\ServiceOrder) {
+            if (! $order instanceof ServiceOrder) {
                 return;
             }
 
@@ -63,7 +64,7 @@ class StorePaymentRequest extends FormRequest
             }
 
             $hasActivePayment = $order->payments()
-                ->whereIn('status', ['waiting_verification', 'verified'])
+                ->whereIn('status', ['waiting_verification', 'verified', 'paid'])
                 ->exists();
 
             if ($hasActivePayment) {
