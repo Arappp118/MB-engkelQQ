@@ -283,4 +283,81 @@ class VehicleApiTest extends TestCase
         $vehicle->refresh();
         $this->assertEquals($customer->id, $vehicle->user_id); // tidak berubah
     }
+
+    public function test_21_customer_dapat_menambah_kembali_kendaraan_yang_sudah_dihapus(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $token = $customer->createToken('t')->plainTextToken;
+
+        // 1. Tambah kendaraan
+        $payload = $this->validPayload(['nomor_polisi' => 'BP 1234 TEST']);
+        $createRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/vehicles', $payload);
+        $createRes->assertStatus(201);
+        $vehicleId = $createRes->json('data.id');
+
+        // 2. Edit kendaraan
+        $updateRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->putJson("/api/v1/vehicles/{$vehicleId}", array_merge($payload, ['model' => 'Beat Deluxe']));
+        $updateRes->assertOk();
+        $this->assertDatabaseHas('vehicles', ['id' => $vehicleId, 'model' => 'Beat Deluxe']);
+
+        // 3. Hapus kendaraan
+        $deleteRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->deleteJson("/api/v1/vehicles/{$vehicleId}");
+        $deleteRes->assertOk();
+        $this->assertSoftDeleted('vehicles', ['id' => $vehicleId]);
+
+        // 4. Tambah kembali kendaraan dengan nomor polisi yang sama
+        $recreateRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/vehicles', array_merge($payload, ['model' => 'Beat New']));
+        $recreateRes->assertStatus(201);
+
+        // Verifikasi aktif kembali di database dan tidak deleted
+        $this->assertDatabaseHas('vehicles', [
+            'nomor_polisi' => 'BP 1234 TEST',
+            'model' => 'Beat New',
+            'deleted_at' => null,
+        ]);
+    }
+
+    public function test_22_web_form_dapat_menambah_kembali_kendaraan_yang_sudah_dihapus(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+
+        // 1. Tambah via web form
+        $payload = [
+            'nomor_polisi' => 'BP 5678 WEB',
+            'merk' => 'Yamaha',
+            'model' => 'NMAX',
+            'tahun' => 2023,
+            'tipe_mesin' => '4_tak',
+            'transmisi' => 'matic',
+            'warna' => 'Hitam',
+        ];
+
+        $res1 = $this->actingAs($customer)->post(route('vehicles.store'), $payload);
+        $res1->assertRedirect(route('vehicles.index'));
+        $vehicle = Vehicle::where('nomor_polisi', 'BP 5678 WEB')->firstOrFail();
+
+        // 2. Edit via web form
+        $res2 = $this->actingAs($customer)->patch(route('vehicles.update', $vehicle), array_merge($payload, ['warna' => 'Merah']));
+        $res2->assertRedirect(route('vehicles.index'));
+        $this->assertDatabaseHas('vehicles', ['id' => $vehicle->id, 'warna' => 'Merah']);
+
+        // 3. Hapus via web form
+        $res3 = $this->actingAs($customer)->delete(route('vehicles.destroy', $vehicle));
+        $res3->assertRedirect(route('vehicles.index'));
+        $this->assertSoftDeleted('vehicles', ['id' => $vehicle->id]);
+
+        // 4. Tambah kembali kendaraan yang sama persis
+        $res4 = $this->actingAs($customer)->post(route('vehicles.store'), $payload);
+        $res4->assertRedirect(route('vehicles.index'));
+
+        // Harus berhasil dan aktif kembali tanpa error 'Nomor polisi ini sudah terdaftar'
+        $this->assertDatabaseHas('vehicles', [
+            'nomor_polisi' => 'BP 5678 WEB',
+            'deleted_at' => null,
+        ]);
+    }
 }

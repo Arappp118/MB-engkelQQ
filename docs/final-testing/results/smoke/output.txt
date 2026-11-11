@@ -1,0 +1,91 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: docs/final-testing/k6/smoke-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 2 max VUs, 45s max duration (incl. graceful stop):
+              * default: 2 looping VUs for 15s (gracefulStop: 30s)
+
+
+running (01.0s), 2/2 VUs, 0 complete and 0 interrupted iterations
+default   [   7% ] 2 VUs  01.0s/15s
+
+running (02.0s), 2/2 VUs, 0 complete and 0 interrupted iterations
+default   [  13% ] 2 VUs  02.0s/15s
+
+running (03.0s), 2/2 VUs, 2 complete and 0 interrupted iterations
+default   [  20% ] 2 VUs  03.0s/15s
+
+running (04.0s), 2/2 VUs, 2 complete and 0 interrupted iterations
+default   [  27% ] 2 VUs  04.0s/15s
+
+running (05.0s), 2/2 VUs, 4 complete and 0 interrupted iterations
+default   [  33% ] 2 VUs  05.0s/15s
+
+running (06.0s), 2/2 VUs, 6 complete and 0 interrupted iterations
+default   [  40% ] 2 VUs  06.0s/15s
+
+running (07.0s), 2/2 VUs, 8 complete and 0 interrupted iterations
+default   [  47% ] 2 VUs  07.0s/15s
+
+running (08.0s), 2/2 VUs, 8 complete and 0 interrupted iterations
+default   [  53% ] 2 VUs  08.0s/15s
+
+running (09.0s), 2/2 VUs, 10 complete and 0 interrupted iterations
+default   [  60% ] 2 VUs  09.0s/15s
+
+running (10.0s), 2/2 VUs, 12 complete and 0 interrupted iterations
+default   [  67% ] 2 VUs  10.0s/15s
+
+running (11.0s), 2/2 VUs, 12 complete and 0 interrupted iterations
+default   [  73% ] 2 VUs  11.0s/15s
+
+running (12.0s), 2/2 VUs, 14 complete and 0 interrupted iterations
+default   [  80% ] 2 VUs  12.0s/15s
+
+running (13.0s), 2/2 VUs, 16 complete and 0 interrupted iterations
+default   [  87% ] 2 VUs  13.0s/15s
+
+running (14.0s), 2/2 VUs, 18 complete and 0 interrupted iterations
+default   [  93% ] 2 VUs  14.0s/15s
+
+running (15.0s), 2/2 VUs, 18 complete and 0 interrupted iterations
+default   [ 100% ] 2 VUs  15.0s/15s
+
+     ✓ health: status is 200
+     ✓ health: success flag is true
+     ✓ me: status is 200
+     ✓ me: returns customer data
+     ✓ vehicles: status is 200
+     ✓ service-items: status is 200
+     ✓ dashboard: status is 200
+     ✓ payment-settings: status is 200
+     ✓ delivery-settings: status is 200
+
+     checks.........................: 100.00% 180 out of 180
+     data_received..................: 85 kB   5.6 kB/s
+     data_sent......................: 31 kB   2.0 kB/s
+     http_req_blocked...............: avg=704.35µs min=344.19µs med=534µs    max=7.02ms  p(90)=816.43µs p(95)=1.46ms 
+     http_req_connecting............: avg=477.69µs min=224.31µs med=360.79µs max=4ms     p(90)=614.22µs p(95)=1.15ms 
+   ✓ http_req_duration..............: avg=71.45ms  min=19.72ms  med=51.71ms  max=1.13s   p(90)=71.69ms  p(95)=82.26ms
+       { expected_response:true }...: avg=71.45ms  min=19.72ms  med=51.71ms  max=1.13s   p(90)=71.69ms  p(95)=82.26ms
+   ✓ http_req_failed................: 0.00%   0 out of 140
+     http_req_receiving.............: avg=1.97ms   min=287.5µs  med=1.74ms   max=10.98ms p(90)=2.46ms   p(95)=3.53ms 
+     http_req_sending...............: avg=184.03µs min=58.18µs  med=129.82µs max=6.62ms  p(90)=191.99µs p(95)=217.1µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s      p(90)=0s       p(95)=0s     
+     http_req_waiting...............: avg=69.29ms  min=18.63ms  med=49.54ms  max=1.12s   p(90)=69.77ms  p(95)=77.65ms
+     http_reqs......................: 140     9.273896/s
+     iteration_duration.............: avg=1.5s     min=1.25s    med=1.36s    max=2.76s   p(90)=1.64s    p(95)=2.74s  
+     iterations.....................: 20      1.324842/s
+     vus............................: 2       min=2          max=2
+     vus_max........................: 2       min=2          max=2
+
+
+running (15.1s), 0/2 VUs, 20 complete and 0 interrupted iterations
+default ✓ [ 100% ] 2 VUs  15s

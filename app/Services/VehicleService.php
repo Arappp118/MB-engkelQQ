@@ -15,6 +15,24 @@ class VehicleService
     public function create(array $data, User $owner): Vehicle
     {
         return DB::transaction(function () use ($data, $owner) {
+            $trashed = Vehicle::onlyTrashed()->where('nomor_polisi', $data['nomor_polisi'])->first();
+
+            if ($trashed) {
+                $trashed->restore();
+                $trashed->update([
+                    ...$data,
+                    'user_id' => $owner->id,
+                ]);
+
+                AuditLog::record('vehicle.created', 'vehicle', $trashed->id, [
+                    'nomor_polisi' => $trashed->nomor_polisi,
+                    'owner_id'     => $owner->id,
+                    'restored'     => true,
+                ]);
+
+                return $trashed->fresh();
+            }
+
             $vehicle = Vehicle::create([
                 ...$data,
                 'user_id' => $owner->id,
@@ -35,6 +53,13 @@ class VehicleService
     public function update(Vehicle $vehicle, array $data): Vehicle
     {
         return DB::transaction(function () use ($vehicle, $data) {
+            if (isset($data['nomor_polisi']) && $data['nomor_polisi'] !== $vehicle->nomor_polisi) {
+                $trashed = Vehicle::onlyTrashed()->where('nomor_polisi', $data['nomor_polisi'])->first();
+                if ($trashed) {
+                    $trashed->forceDelete();
+                }
+            }
+
             $before = $vehicle->only(array_keys($data));
 
             $vehicle->update($data);

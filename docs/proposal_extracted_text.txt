@@ -1,0 +1,358 @@
+PROPOSAL SISTEM MEDICAL CHECKUP M-BENGKELQQ
+PEMOGRAMAN WEB
+Disusun Oleh Kelompok 10:
+Ridho Ramadani E.
+2401020121
+Muhammad Agus Farhan Talib
+2401020111
+Firman Dwi Syahputra
+2401020112
+Farrel Abhista Farouk
+2401020117
+Saif Alif Abyan
+2401020163
+Dosen Pengampu:Muhammad Radzi Rathomi, S.Kom., M.Cs.
+JURUSAN TEKNIK ELEKTRO DAN INFORMATIKAPROGRAM STUDI TEKNIK INFORMATIKAUNIVERSITAS MARITIM RAJA ALI HAJI2026
+DAFTAR ISI
+BAB I PENDAHULUAN1
+1.1 Latar Belakang1
+1.2 Rumusan Masalah1
+1.3 Tujuan1
+1.4 Batasan Masalah1
+1.5 Manfaat2
+BAB II TINJAUAN PUSTAKA3
+2.1 Sistem Informasi Bengkel3
+2.2 Aplikasi Berbasis Web3
+2.3 Unified Modeling Language (UML)3
+2.4 Basis Data Relasional3
+2.5 Role-Based Access Control3
+2.6 Penugasan Otomatis dan Perhitungan Ongkir3
+BAB III ANALISIS DAN PERANCANGAN SISTEM4
+3.1 Gambaran Umum Sistem4
+3.2 Kebutuhan Fungsional (Use Case)4
+3.3 Rancangan Basis Data (Relasi Antar Tabel)5
+3.4 Activity Diagram6
+3.4.1 Autentikasi dan Kelola Profil6
+3.4.2 Kelola Data Kendaraan7
+3.4.3 Booking, Keluhan, dan Auto-Assignment Mekanik8
+3.4.4 Diagnosis, Servis, dan Sparepart9
+3.4.5 Pembayaran dan Invoice10
+3.4.6 Pickup, Delivery, dan Perhitungan Ongkir11
+3.4.7 Verifikasi dan Master Data12
+3.5 Sequence Diagram12
+3.5.1 Autentikasi dan Kelola Profil12
+3.5.2 Kelola Data Kendaraan13
+3.5.3 Booking, Keluhan dan Auto-Assigtment Mekanik14
+3.5.4 Diagnosis, Servis dan Sperpart15
+3.5.5 Pembayaran dan Invoice16
+3.5.6 Pickup, Delivery  dan Perhitungan Ongkir17
+3.5.7 Verifikasi dan Master Data18
+3.6 UI18
+3.6.1 Login19
+3.6.2 Costumer19
+3.6.3 Mekanik22
+3.6.4 Kurir24
+3.6.5 Admin25
+BAB IV METODE DAN RENCANA PELAKSANAAN28
+4.1 Metode Pengembangan28
+4.2 Kebutuhan Perangkat28
+4.3 Pembangunan Tugas Anggota28
+4.4 Jadwal Pelaksanaan28
+4.5 Rencana Pengujian29
+BAB V PENUTUPAN30
+5.1 Kesimpulan30
+5.2 Saran30
+DAFTAR PUSTAKA31
+DAFTAR GAMBAR
+Gambar  1 Use Case4
+Gambar  2 RAT5
+Gambar  3 Autentikasi dan Kelola Profil6
+Gambar  4 Kelola Data Kendaraan7
+Gambar  5 Booking, Keluhan, dan Auto-Assignment Mekanik8
+Gambar  6 Diagnosis, Servis, dan Sparepart9
+Gambar  7 Pembayaran dan Invoice10
+Gambar  8 Pickup, Delivery, dan Perhitungan Ongkir11
+Gambar  9 Verifikasi dan Master Data12
+Gambar  10 Autentikasi dan Kelola Profil12
+Gambar  11 Kelola Data Kendaraan13
+Gambar  12 Booking, Keluhan dan Auto-Assigtment Mekanik14
+Gambar  13 Diagnosis, Servis dan Sperpart15
+Gambar  14 Pembayaran dan Invoice16
+Gambar  15 Pickup, Delivery  dan Perhitungan Ongkir17
+Gambar  16 Verifikasi dan Master Data18
+Gambar  17 Halaman Login19
+Gambar  18 Halaman Dashboard Customer19
+Gambar  19 Halaman Kendaraan Customer20
+Gambar  20 Halaman Booking Custumer20
+Gambar  21 Halaman Servise Order Custumer21
+Gambar  22 Halaman Pembayaran Custumer21
+Gambar  23 Halaman Profil Custumer22
+Gambar  24 Halaman Dashboard Mekanik22
+Gambar  25 Halaman service Order Mekanik23
+Gambar  26 Halaman Service Item Mekanik23
+Gambar  27 Halaman Dashboard Kurir24
+Gambar  28 Halaman Delivery Task Kurir24
+Gambar  29 Halaman Dashboard Admin25
+Gambar  30 Halaman Service Item Admin25
+Gambar  31 Halaman Verifikasi Pembayaran Admin26
+Gambar  32 Halaman Delivery Task Admin26
+Gambar  33 Halaman Pengaturan Delivery Admin27
+DAFTAR TABEL
+Tabel 1 penjelasan use case5
+Tabel 2 Isi RAT6
+Tabel 3 Kebutuhan Perangkat28
+Tabel 4 Pembagian Tugas28
+Tabel 5 Jadwal Pelaksanaan29
+PENDAHULUAN
+Latar Belakang
+Kendaraan bermotor adalah alat transportasi utama masyarakat. Agar tetap aman dan awet, kendaraan perlu diperiksa dan dirawat secara berkala, layaknya medical checkup pada manusia. Pada praktiknya, banyak bengkel masih mengelola proses servis secara manual: pelanggan datang langsung tanpa jadwal pasti, keluhan dicatat di kertas, mekanik dipilih seadanya, biaya suku cadang dihitung tangan, dan bukti pembayaran sulit dilacak. Cara ini menimbulkan antrean panjang, kesalahan pencatatan, harga yang tidak konsisten, serta riwayat servis yang tidak terdokumentasi.
+Selain itu, pelanggan sering kesulitan membawa kendaraan ke bengkel karena kendala waktu atau jarak, sehingga layanan jemput dan antar kendaraan (pickup & delivery) menjadi kebutuhan yang semakin relevan.
+Rumusan Masalah
+Bagaimana merancang sistem yang memungkinkan pelanggan melakukan pemesanan servis dan menyampaikan keluhan secara daring?
+Bagaimana sistem dapat menugaskan mekanik secara otomatis berdasarkan spesialisasi (2 tak, 4 tak, kelistrikan) dan ketersediaan jadwal?
+Bagaimana mencatat diagnosis, jasa, dan sparepart sehingga total biaya dihitung akurat dan invoice lama tidak berubah saat harga katalog berubah?
+Bagaimana mengelola layanan pickup dan delivery beserta perhitungan ongkir otomatis berdasarkan jarak?
+Bagaimana pembayaran pelanggan dapat diunggah, diverifikasi admin, dan dicatat secara transparan?
+Tujuan
+Merancang dan membangun sistem informasi bengkel berbasis web yang mencakup alur dari booking hingga pembayaran.
+Menyediakan fitur auto-assignment mekanik berdasarkan spesialisasi dan jadwal.
+Menyediakan pengelolaan service order, katalog jasa/sparepart, dan invoice dengan harga snapshot.
+Menyediakan fitur pickup/delivery dengan perhitungan ongkir otomatis.
+Menyediakan alur pembayaran (cash, transfer, QRIS) dengan verifikasi admin dan pencatatan audit.
+Batasan Masalah
+Sistem melayani empat peran pengguna: customer, mekanik, kurir, dan admin.
+Metode pembayaran yang didukung adalah cash, transfer, dan QRIS; verifikasi dilakukan manual oleh admin melalui bukti bayar yang diunggah.
+Spesialisasi mekanik dibatasi pada tiga kategori: mesin 2 tak, mesin 4 tak, dan kelistrikan.
+Perhitungan ongkir didasarkan pada tarif dasar dan tarif per kilometer yang diatur admin pada tabel pengaturan pengiriman.
+Pada tahap ini, pekerjaan mencakup perancangan sistem (use case, basis data, activity diagram, sequence diagram, dan desain UI) serta implementasi sesuai kebutuhan mata kuliah.
+Manfaat
+Bagi pelanggan: pemesanan servis lebih mudah, status servis dapat dipantau, biaya transparan, dan riwayat kendaraan tersimpan.
+Bagi bengkel: pembagian kerja mekanik lebih merata, pencatatan rapi, stok sparepart terkontrol, dan pembayaran terverifikasi.
+Bagi mahasiswa: sarana penerapan ilmu pemrograman web, perancangan basis data, dan pemodelan sistem (UML) pada kasus nyata.
+TINJAUAN PUSTAKA
+Sistem Informasi Bengkel
+Sistem informasi bengkel adalah sistem yang mengumpulkan, menyimpan, dan mengolah data operasional bengkel, seperti data pelanggan, kendaraan, jadwal servis, suku cadang, dan transaksi. Digitalisasi proses ini mengurangi kesalahan pencatatan dan mempercepat pelayanan.
+Aplikasi Berbasis Web
+Aplikasi web diakses melalui peramban tanpa instalasi khusus sehingga dapat digunakan pada berbagai perangkat. Sistem M-BengkelQQ memakai arsitektur klien-server dengan antarmuka web yang berkomunikasi dengan server melalui REST API (misalnya POST /api/login, GET /api/vehicles, POST /api/payments).
+Unified Modeling Language (UML)
+UML adalah bahasa pemodelan standar untuk menggambarkan sistem perangkat lunak. Proposal ini menggunakan tiga model:
+Use case diagram: menggambarkan fungsi sistem dari sudut pandang aktor.
+Activity diagram: menggambarkan alur aktivitas dan percabangan keputusan dalam suatu proses.
+Sequence diagram: menggambarkan urutan pesan antarkomponen (antarmuka, controller, service, basis data).
+Basis Data Relasional
+Basis data relasional menyimpan data dalam tabel yang saling terhubung melalui primary key dan foreign key. Relasi antartabel (RAT) menjaga integritas data, misalnya satu user dapat memiliki banyak kendaraan, dan satu booking menghasilkan satu service order. Teknik snapshot harga pada tabel service_order_items dipakai agar invoice yang sudah terbit tidak berubah ketika harga katalog diperbarui.
+Role-Based Access Control
+Role-based access control (RBAC) membatasi hak akses berdasarkan peran. Pada M-BengkelQQ, kolom role pada tabel users (customer, mechanic, courier, admin) menentukan dashboard dan fitur yang tersedia.
+Penugasan Otomatis dan Perhitungan Ongkir
+Penugasan otomatis memilih sumber daya (mekanik) berdasarkan aturan tertentu, yaitu kecocokan spesialisasi dengan jenis mesin kendaraan dan ketersediaan jadwal pada tanggal dan jam booking. Perhitungan ongkir menggunakan rumus sederhana:
+Ongkir = tarif dasar + (jarak dalam km × tarif per km)
+Nilai tarif dasar dan tarif per km diambil dari tabel delivery_settings.
+ANALISIS DAN PERANCANGAN SISTEM
+Gambaran Umum Sistem
+M-BengkelQQ melibatkan lima pihak: customer, mekanik, kurir, admin, dan sistem (untuk proses otomatis). Alur utamanya: customer mendaftarkan kendaraan, membuat booking dan keluhan, sistem menugaskan mekanik, mekanik membuat diagnosis dan memilih sparepart, customer membayar, lalu admin memverifikasi pembayaran. Bila customer memilih layanan jemput/antar, sistem menghitung ongkir dan membuat tugas untuk kurir.
+Kebutuhan Fungsional (Use Case)
+Gambar  1 Use Case
+UC-01
+Autentikasi & Profil
+Semua aktor
+UC-02
+Kelola Data Kendaraan
+Customer
+UC-03
+Buat Booking & Keluhan
+Customer
+UC-04
+Auto-Assignment Mekanik
+Sistem (dipicu dari UC-03)
+UC-05
+Kelola Diagnosis & Servis
+Mekanik
+UC-06
+Pilih Items & Sparepart DB
+Mekanik
+UC-07
+Task Pickup & Delivery
+Kurir
+UC-08
+Hitung Ongkir Otomatis
+Sistem (dipicu dari UC-07)
+UC-09
+Pembayaran & Invoice
+Customer, Admin
+UC-10
+Verifikasi & Master Data
+Admin
+Tabel 1 penjelasan use case
+Rancangan Basis Data (Relasi Antar Tabel)
+Gambar  2 RAT
+Tabel
+Fungsi
+users
+Semua akun, dibedakan kolom role (customer, mechanic, courier, admin). Kolom specialization untuk mekanik (2 tak, 4 tak, kelistrikan).
+vehicles
+Kendaraan milik user: plat, merk, model, tahun, tipe mesin.
+bookings
+Pemesanan servis: tanggal, jam, keluhan, opsi pickup, mekanik yang ditugaskan, dan status (pending → confirmed → assigned → in_service → completed/cancelled).
+service_orders
+Hasil dari booking: diagnosis, catatan mekanik, subtotal, ongkir, dan grand total.
+service_items
+Katalog jasa dan sparepart: kategori, harga, stok.
+service_order_items
+Item yang dipakai pada satu service order. Harga dan nama disimpan sebagai snapshot.
+delivery_tasks
+Tugas pickup/delivery oleh kurir, lengkap dengan jarak (km) dan ongkir.
+payments
+Pembayaran (cash/transfer/QRIS), bukti bayar, status verifikasi, dan admin yang memverifikasi.
+delivery_settings
+Tarif dasar dan tarif per km untuk hitung ongkir.
+audit_logs
+Catatan aktivitas user.
+Tabel 2 Isi RAT
+Activity Diagram
+Autentikasi dan Kelola Profil
+Gambar  3 Autentikasi dan Kelola Profil
+Kelola Data Kendaraan
+Gambar  4 Kelola Data Kendaraan
+Booking, Keluhan, dan Auto-Assignment Mekanik
+Gambar  5 Booking, Keluhan, dan Auto-Assignment Mekanik
+Diagnosis, Servis, dan Sparepart
+Gambar  6 Diagnosis, Servis, dan Sparepart
+Pembayaran dan Invoice
+Gambar  7 Pembayaran dan Invoice
+Pickup, Delivery, dan Perhitungan Ongkir
+Gambar  8 Pickup, Delivery, dan Perhitungan Ongkir
+Verifikasi dan Master Data
+Gambar  9 Verifikasi dan Master Data
+Sequence Diagram
+Autentikasi dan Kelola Profil
+Gambar  10 Autentikasi dan Kelola Profil
+Kelola Data Kendaraan
+Gambar  11 Kelola Data Kendaraan
+Booking, Keluhan dan Auto-Assigtment Mekanik
+Gambar  12 Booking, Keluhan dan Auto-Assigtment Mekanik
+Diagnosis, Servis dan Sperpart
+Gambar  13 Diagnosis, Servis dan Sperpart
+Pembayaran dan Invoice
+Gambar  14 Pembayaran dan Invoice
+Pickup, Delivery  dan Perhitungan Ongkir
+Gambar  15 Pickup, Delivery  dan Perhitungan Ongkir
+Verifikasi dan Master Data
+Gambar  16 Verifikasi dan Master Data
+Login: POST /api/login → cek akun di database → kalau valid, buat sesi dan masuk ke dashboard, kalau tidak, tampilkan error.
+Kendaraan: GET/POST/PUT/DELETE /api/vehicles dengan validasi data.
+Booking: BookingController menyimpan booking, lalu MechanicAssignmentService memilih mekanik dan membuat service_orders.
+Pembayaran: GET /api/service-orders/{id}/invoice lalu POST /api/payments. Status disimpan sebagai waiting_verification.
+Pickup/Delivery dan Verifikasi: memakai delivery_settings untuk ongkir dan payments untuk verifikasi admin.
+UI
+Antarmuka dirancang untuk lima kelompok halaman: login, customer, mekanik, kurir, dan admin. Desain prototipe dibuat menggunakan Figma dan dapat dilihat pada tautan berikut:
+https://www.figma.com/make/NgVvQSPsLETeTjDMJ0119J/Create-New-UI-UX-Design?t=g3Lk9A4UcOvOj97f-1
+Login
+Gambar  17 Halaman Login
+Costumer
+Gambar  18 Halaman Dashboard Customer
+Gambar  19 Halaman Kendaraan Customer
+Gambar  20 Halaman Booking Custumer
+Gambar  21 Halaman Servise Order Custumer
+Gambar  22 Halaman Pembayaran Custumer
+Gambar  23 Halaman Profil Custumer
+Mekanik
+Gambar  24 Halaman Dashboard Mekanik
+Gambar  25 Halaman service Order Mekanik
+Gambar  26 Halaman Service Item Mekanik
+Kurir
+Gambar  27 Halaman Dashboard Kurir
+Gambar  28 Halaman Delivery Task Kurir
+Admin
+Gambar  29 Halaman Dashboard Admin
+Gambar  30 Halaman Service Item Admin
+Gambar  31 Halaman Verifikasi Pembayaran Admin
+Gambar  32 Halaman Delivery Task Admin
+Gambar  33 Halaman Pengaturan Delivery Admin
+METODE DAN RENCANA PELAKSANAAN
+Metode Pengembangan
+Pengembangan mengikuti tahapan model waterfall yang disederhanakan:
+Analisis kebutuhan: identifikasi aktor dan fungsi sistem (use case).
+Perancangan: basis data (RAT), activity diagram, sequence diagram, dan desain UI.
+Implementasi: pembuatan antarmuka web, REST API, dan basis data berdasarkan rancangan.
+Pengujian: uji fungsional setiap use case dari sudut pandang tiap peran pengguna.
+Dokumentasi dan penyempurnaan: penyusunan laporan akhir dan perbaikan.
+Kebutuhan Perangkat
+Kategori
+Kebutuhan
+Antarmuka
+HTML, CSS, JavaScript; prototipe UI di Figma
+Server
+Aplikasi web dengan pola controller dan service serta REST API (framework ditetapkan pada tahap implementasi)
+Basis data
+Basis data relasional (10 tabel sesuai RAT)
+Pemodelan
+Alat penggambar UML untuk use case, activity, dan sequence diagram
+Kolaborasi
+Git/GitHub untuk pengelolaan kode bersama
+Tabel 3 Kebutuhan Perangkat
+Pembangunan Tugas Anggota
+No
+Nama
+NIM
+Tugas
+1
+Ridho Ramadani E. (Ketua)
+2401020121
+Menyusun activity diagram 1–3: autentikasi dan kelola profil, kelola data kendaraan, serta booking, keluhan, dan auto-assignment mekanik.
+2
+Muhammad Agus Farhan Talib
+2401020111
+Menyusun activity diagram 4–7: diagnosis, servis, dan sparepart; pembayaran dan invoice; pickup, delivery, dan perhitungan ongkir; serta verifikasi dan master data.
+3
+Firman Dwi Syahputra
+2401020112
+Merancang antarmuka pengguna (UI) untuk halaman login, customer, mekanik, kurir, dan admin.
+4
+Farrel Abhista Farouk
+2401020117
+Menyusun sequence diagram dan rancangan alur komunikasi antarkomponen: booking, penugasan mekanik, pengelolaan servis, pembayaran, dan verifikasi admin.
+5
+Saif Alif Abyan
+2401020163
+Menyusun use case sistem, mengidentifikasi aktor dan kebutuhan fungsional, serta alur interaksi antara customer, mekanik, kurir, admin, dan sistem.
+Tabel 4 Pembagian Tugas
+Jadwal Pelaksanaan
+Tahap
+Minggu 1
+Minggu 2
+Minggu 3
+Minggu 4
+Minggu 5
+Minggu 6
+Analisis kebutuhan dan use case
+✔
+Perancangan basis data dan UML
+✔
+✔
+Desain UI (Figma)
+✔
+✔
+Implementasi
+✔
+✔
+✔
+Pengujian
+✔
+✔
+Dokumentasi dan laporan akhir
+✔
+Tabel 5 Jadwal Pelaksanaan
+Rencana Pengujian
+Pengujian dilakukan dengan metode black box pada setiap use case, misalnya: login dengan akun valid dan tidak valid, tambah/ubah/hapus kendaraan, booking saat mekanik tersedia dan tidak tersedia, pemilihan sparepart dengan stok cukup dan habis, unggah bukti bayar, hitung ongkir sesuai jarak, serta verifikasi atau penolakan pembayaran oleh admin.
+PENUTUPAN
+Kesimpulan
+M-BengkelQQ dirancang sebagai sistem berbasis web yang mengintegrasikan proses bengkel dari pendaftaran kendaraan, booking, penugasan mekanik otomatis, diagnosis dan pemilihan sparepart, layanan pickup/delivery dengan ongkir otomatis, hingga pembayaran dan verifikasi. Rancangan telah dituangkan dalam 10 use case, 10 tabel basis data, activity diagram, sequence diagram, dan prototipe UI untuk empat peran pengguna. Sistem ini diharapkan membuat layanan bengkel lebih tertib, transparan, dan efisien bagi pelanggan maupun pengelola.
+Saran
+Menambahkan integrasi payment gateway agar verifikasi pembayaran dapat berjalan otomatis.
+Menambahkan pelacakan lokasi kurir secara langsung (real-time tracking) dan notifikasi melalui WhatsApp atau email.
+Menambahkan pengingat servis berkala berdasarkan riwayat kendaraan serta laporan statistik untuk admin.
+Mengembangkan versi aplikasi seluler agar akses pelanggan lebih praktis.
+DAFTAR PUSTAKA
+Sommerville, I. Software Engineering. Pearson.
+Fowler, M. UML Distilled: A Brief Guide to the Standard Object Modeling Language. Addison-Wesley.
+Elmasri, R. dan Navathe, S. B. Fundamentals of Database Systems. Pearson.

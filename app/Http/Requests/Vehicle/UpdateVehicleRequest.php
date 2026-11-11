@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Vehicle;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateVehicleRequest extends FormRequest
 {
@@ -16,7 +17,12 @@ class UpdateVehicleRequest extends FormRequest
         $vehicle = $this->route('vehicle');
 
         return [
-            'nomor_polisi'  => ['required', 'string', 'max:20', 'unique:vehicles,nomor_polisi,' . $vehicle->id],
+            'nomor_polisi'  => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('vehicles', 'nomor_polisi')->ignore($vehicle->id)->whereNull('deleted_at'),
+            ],
             'merk'          => ['required', 'string', 'max:100'],
             'model'         => ['required', 'string', 'max:100'],
             'tahun'         => ['required', 'integer', 'min:1980', 'max:' . (date('Y') + 1)],

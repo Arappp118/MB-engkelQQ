@@ -4,6 +4,7 @@ namespace App\Http\Requests\Vehicle;
 
 use App\Models\Vehicle;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreVehicleRequest extends FormRequest
 {
@@ -15,7 +16,12 @@ class StoreVehicleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nomor_polisi'  => ['required', 'string', 'max:20', 'unique:vehicles,nomor_polisi'],
+            'nomor_polisi'  => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('vehicles', 'nomor_polisi')->whereNull('deleted_at'),
+            ],
             'merk'          => ['required', 'string', 'max:100'],
             'model'         => ['required', 'string', 'max:100'],
             'tahun'         => ['required', 'integer', 'min:1980', 'max:' . (date('Y') + 1)],
